@@ -1,0 +1,4 @@
+Because the config module (npm install config) is expecting "config" folder, 
+and inside this folder is looking for json config files named like the NODE_ENV variables.
+
+:memory: option will create db in memory. Fast, but upon shutting down, db dissapears
