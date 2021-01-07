@@ -4,7 +4,7 @@
     "username": "drKreshel",
     "password": "superfluosCat",
     "dialect": "sqlite",
-    "storage": "/.database.sqlite",
+    "storage": "./database.sqlite",
     "logging": false
   }
 }

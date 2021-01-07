@@ -7,7 +7,7 @@ beforeAll(() => sequelize.sync());
 
 beforeEach(() => User.destroy({ truncate: true }));
 
-function postUser(username = 'user1', email = 'user1@mail.com', password = 'P4ssword') {
+function postUser({ username = 'user1', email = 'user1@mail.com', password = 'P4ssword' } = {}) {
   return request(app).post('/api/1.0/users').send({ username, email, password });
 }
 
@@ -42,21 +42,106 @@ describe('User registration', () => {
   });
 
   it('returns 400 when username is null', async () => {
-    const response = await postUser(null);
+    const response = await postUser({ username: null });
     expect(response.status).toBe(400);
   });
 
   it('returns validationErrors field in response body when validation errors occurs', async () => {
-    const response = await postUser(null);
+    const response = await postUser({ username: null });
     const body = response.body;
     expect(body.validationErrors).not.toBeUndefined();
   });
 
-  it('returns username cannot be null validation error when username is null', async () => {
-    const response = await postUser(null);
+  /* These 3 are replaced with it.each below
+  it('returns "username cannot be null" validation error when username is null', async () => {
+    const response = await postUser({ username: null });
     const body = response.body;
     expect(body.validationErrors.username).toBe('Username cannot be null');
   });
+  
+  it('returns "E-mail cannot be null" validation error when email is null', async () => {
+    const response = await postUser({ email: null });
+    const body = response.body;
+    expect(body.validationErrors.email).toBe('E-mail cannot be null');
+  });
+  
+  it('returns "Password cannot be null" validation error when password is null', async () => {
+    const response = await postUser({ password: null });
+    const body = response.body;
+    expect(body.validationErrors.password).toBe('Password cannot be null');
+  });
+*/
+  // plain js
+  // [
+  //   { field: 'username', value: null, expectedMessage: 'Username cannot be null' },
+  //   {
+  //     field: 'username',
+  //     value: 'usr',
+  //     expectedMessage: 'Username field must have a minimum 4 and a maximum of 32 characters',
+  //   },
+  //   { field: 'password', value: null, expectedMessage: 'Password cannot be null' },
+  //   { field: 'email', value: null, expectedMessage: 'E-mail cannot be null' },
+  // ].forEach(({ field, value, expectedMessage }) => {
+  //   it(`returns ${expectedMessage} when ${field} is ${value}`, async () => {
+  //     const response = await postUser({ [field]: value });
+  //     const body = response.body;
+  //     expect(body.validationErrors[field]).toBe(expectedMessage);
+  //   });
+  // });
+
+  // using jest method:
+  // test.each([
+  //   ['username', 'Username cannot be null'],
+  //   ['password', 'Password cannot be null'],
+  //   ['email', 'E-mail cannot be null'],
+  // ])('when %s is null, %s is received', async (field, expectedMessage) => {
+  //   const response = await postUser({ [field]: null });
+  //   const body = response.body;
+  //   expect(body.validationErrors[field]).toBe(expectedMessage);
+  // });
+
+  it.each`
+    field         | value               | expectedMessage
+    ${'username'} | ${null}             | ${'Username cannot be null'}
+    ${'username'} | ${'usr'}            | ${'Username field must have a minimum 4 and a maximum of 32 characters'}
+    ${'username'} | ${'a'.repeat(33)}   | ${'Username field must have a minimum 4 and a maximum of 32 characters'}
+    ${'email'}    | ${null}             | ${'E-mail cannot be null'}
+    ${'email'}    | ${'mail.com'}       | ${'E-mail is not valid'}
+    ${'email'}    | ${'user1@mail'}     | ${'E-mail is not valid'}
+    ${'email'}    | ${'user1.mail.com'} | ${'E-mail is not valid'}
+    ${'password'} | ${null}             | ${'Password cannot be null'}
+    ${'password'} | ${'P4ssw'}          | ${'Password must have at least 6 characters'}
+    ${'password'} | ${'alllowercase'}   | ${'Password must have at least one uppercase, one lowercase letter and one number'}
+    ${'password'} | ${'ALLUPPERCASE'}   | ${'Password must have at least one uppercase, one lowercase letter and one number'}
+    ${'password'} | ${'123456'}         | ${'Password must have at least one uppercase, one lowercase letter and one number'}
+    ${'password'} | ${'lower&UPPER'}    | ${'Password must have at least one uppercase, one lowercase letter and one number'}
+    ${'password'} | ${'lower&1234'}     | ${'Password must have at least one uppercase, one lowercase letter and one number'}
+    ${'password'} | ${'1234&UPPER'}     | ${'Password must have at least one uppercase, one lowercase letter and one number'}
+  `('returns "$expectedMessage" when $field is "$value"', async ({ field, value, expectedMessage }) => {
+    const response = await postUser({ [field]: value });
+    const body = response.body;
+    expect(body.validationErrors[field]).toBe(expectedMessage);
+  });
+
+  it('returns "E-mail already in use" when same email is already in the database', async () => {
+    await User.create({ username: 'user1', email: 'user1@mail.com', password: 'P4ssword' });
+    const response = await postUser();
+    const body = response.body;
+    expect(body.validationErrors.email).toBe('E-mail already in use');
+  });
+
+  it('returns errors for both, username is null and email is in use', async () => {
+    await User.create({ username: 'user1', email: 'user1@mail.com', password: 'P4ssword' });
+    const response = await postUser({ username: null });
+    const body = response.body;
+    expect(Object.keys(body.validationErrors)).toEqual(['username', 'email']);
+  });
+
+  // it('returns size validation error when username length is lower than 4', async () => {
+  //   const response = await postUser({ username: 'use' });
+  //   const body = response.body;
+  //   expect(body.validationErrors.username).toBe('Username field must have a minimum 4 and a maximum of 32 characters');
+  // });
 });
 
 /**
