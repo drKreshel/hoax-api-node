@@ -3,6 +3,8 @@
   "rules": {
     //"max-len": ["warn", { "code": 120 }],
     "prefer-destructuring": 0,
+    "one-var":0,
+    "camelcase": 0,
     "prettier/prettier": [
       "warn",
       {

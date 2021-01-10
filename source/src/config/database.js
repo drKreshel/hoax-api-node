@@ -6,5 +6,4 @@ const { database, username, password, dialect, storage, logging } = config.get('
 
 const sequelize = new Sequelize(database, username, password, { dialect, storage, logging });
 
-
 module.exports = sequelize;

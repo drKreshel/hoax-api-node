@@ -1,0 +1,12 @@
+{
+  "user_create_success": "User wurde erfolgreich erstellt",
+  "username_null": "Username darf nicht null sein",
+  "username_size": "Das Feld username muss mindestens 4 und höchstens 32 Zeichen lang sein.",
+  "email_null": "E-Mail darf nicht null sein",
+  "email_invalid": "E-Mail ist ungültig",
+  "password_null": "Passwort darf nicht null sein",
+  "password_size": "Passwort muss mindestens 6 Zeichen haben",
+  "password_pattern": "Das Passwort muss mindestens einen Großbuchstaben, einen Kleinbuchstaben und eine Zahl enthalten",
+  "email_in_use": "E-Mail wird bereits verwendet",
+  "email_failure": "E-Mail-Fehler"
+}
