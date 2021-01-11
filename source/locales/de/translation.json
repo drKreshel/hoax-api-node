@@ -8,5 +8,8 @@
   "password_size": "Passwort muss mindestens 6 Zeichen haben",
   "password_pattern": "Das Passwort muss mindestens einen Großbuchstaben, einen Kleinbuchstaben und eine Zahl enthalten",
   "email_in_use": "E-Mail wird bereits verwendet",
-  "email_failure": "E-Mail-Fehler"
+  "email_failure": "E-Mail-Fehler",
+  "account_activation_failure": "Dieses Konto ist entweder aktiv oder das Token ist ungültig",
+  "account_activation_success": "Das Konto wurde erfolgreich aktiviert",
+  "validation_failure": "Validierungsfehler gefunden"
 }

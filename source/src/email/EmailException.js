@@ -6,5 +6,6 @@ module.exports = function EmailException() {
 //* Variant: ES6 classes
 // module.exports = class EmailException {
 //   message = 'email_failure';
+
 //   status = 502;
 // };

@@ -1,12 +1,15 @@
 {
-  "user_create_success":"User created successfully",
-  "username_null" : "Username cannot be null",
-  "username_size" : "Username field must have a minimum 4 and a maximum of 32 characters",
-  "email_null" : "E-mail cannot be null",
-  "email_invalid" : "E-mail is not valid",
-  "password_null" : "Password cannot be null",
-  "password_size" : "Password must have at least 6 characters",
-  "password_pattern" : "Password must have at least one uppercase, one lowercase letter and one number",
-  "email_in_use" : "E-mail is already in use",
-  "email_failure": "E-mail failure"
+  "user_create_success": "User created successfully",
+  "username_null": "Username cannot be null",
+  "username_size": "Username field must have a minimum 4 and a maximum of 32 characters",
+  "email_null": "E-mail cannot be null",
+  "email_invalid": "E-mail is not valid",
+  "password_null": "Password cannot be null",
+  "password_size": "Password must have at least 6 characters",
+  "password_pattern": "Password must have at least one uppercase, one lowercase letter and one number",
+  "email_in_use": "E-mail is already in use",
+  "email_failure": "E-mail failure",
+  "account_activation_failure": "This account is either active or the token is invalid",
+  "account_activation_success": "The account was succesfully activated",
+  "validation_failure":"Validation failure"
 }

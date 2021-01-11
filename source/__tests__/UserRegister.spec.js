@@ -198,7 +198,6 @@ describe('User registration', () => {
     await postUser({ inactive: false });
     const users = await User.findAll();
     const savedUser = users[0];
-    console.log('savedUser', savedUser);
     expect(savedUser.inactive).toBe(true);
   });
 
@@ -240,6 +239,11 @@ describe('User registration', () => {
     const users = await User.findAll();
     expect(users.length).toBe(0);
   });
+
+  it('returns "Validation failure" error message when validation errors occurs', async () => {
+    const response = await postUser({ username: null });
+    expect(response.body.message).toBe('Validation failure');
+  });
 });
 
 describe('Internalization', () => {
@@ -254,6 +258,7 @@ describe('Internalization', () => {
     'Das Passwort muss mindestens einen Großbuchstaben, einen Kleinbuchstaben und eine Zahl enthalten';
   const email_in_use = 'E-Mail wird bereits verwendet';
   const email_failure = 'E-Mail-Fehler';
+  const validation_failure = 'Validierungsfehler gefunden';
 
   it(`returns "${user_create_success}" when signup request is valid and language is set to german`, async () => {
     const response = await postUser({}, 'de');
@@ -298,17 +303,97 @@ describe('Internalization', () => {
     const response = await postUser({}, 'de');
     expect(response.body.message).toBe(email_failure);
   });
+
+  it(`returns "${validation_failure}" error message when validation errors occurs and language is set to german`, async () => {
+    const response = await postUser({ username: null }, 'de');
+    expect(response.body.message).toBe(validation_failure);
+  });
 });
 
 describe('User activation', () => {
   it('activates account when correct token is sent', async () => {
     await postUser();
-    let users = User.findAll();
+    let users = await User.findAll();
     const token = users[0].activationToken;
 
-    await request(app).post(`/api/1.0/users/tokens/${token}`).send(); // ? Should be http PATCH?
+    await request(app).post(`/api/1.0/users/token/${token}`); // ? Shouldn't be http PATCH?
     users = await User.findAll();
     expect(users[0].inactive).toBe(false);
+  });
+
+  it('removes the token from user table after succesful activation', async () => {
+    await postUser();
+    let users = await User.findAll();
+    const token = users[0].activationToken;
+
+    await request(app).post(`/api/1.0/users/token/${token}`); // ? Shouldn't be http PATCH?
+    users = await User.findAll();
+    expect(users[0].activationToken).toBeFalsy();
+  });
+
+  it("does not activate the user's account when token is incorrect", async () => {
+    await postUser();
+    let users = await User.findAll();
+    const token = 'this-is-an-invalid-token';
+
+    await request(app).post(`/api/1.0/users/token/${token}`);
+    users = await User.findAll();
+    expect(users[0].inactive).toBe(true);
+  });
+
+  it('returns 400 "Bad Request" when token is incorrect', async () => {
+    await postUser();
+    const token = 'this-is-an-invalid-token';
+    const response = await request(app).post(`/api/1.0/users/token/${token}`);
+    expect(response.status).toBe(400);
+  });
+
+  it.each`
+    language | tokenStatus  | message
+    ${'de'}  | ${'invalid'} | ${'Dieses Konto ist entweder aktiv oder das Token ist ungültig'}
+    ${'en'}  | ${'invalid'} | ${'This account is either active or the token is invalid'}
+    ${'de'}  | ${'valid'}   | ${'Das Konto wurde erfolgreich aktiviert'}
+    ${'en'}  | ${'valid'}   | ${'The account was succesfully activated'}
+  `(
+    'returns "$message" when token is $tokenStatus and language is set to $langauge',
+    async ({ language, tokenStatus, message }) => {
+      await postUser();
+      let token = 'this-is-an-invalid-token';
+      if (tokenStatus === 'valid') {
+        const users = await User.findAll();
+        token = users[0].activationToken;
+      }
+      const response = await request(app).post(`/api/1.0/users/token/${token}`).set({ 'Accept-Language': language });
+      expect(response.body.message).toBe(message);
+    }
+  );
+});
+
+describe('', () => {
+  it('returns path, timestamp, message and validationErrors on the response body when a validation error occurs', async () => {
+    const response = await postUser({ username: null });
+    expect(Object.keys(response.body)).toEqual(['path', 'timestamp', 'message', 'validationErrors']);
+  });
+
+  it('returns path, timestamp and message on the response body when an error other than "Validation Error" ocurrs', async () => {
+    const token = 'this-is-an-invalid-token';
+    const response = await request(app).post(`/api/1.0/users/token/${token}`).send(); // el send no parece tener ninguna influencia en los tests
+    expect(Object.keys(response.body)).toEqual(['path', 'timestamp', 'message']);
+  });
+
+  it('returns path on the error response body', async () => {
+    const token = 'this-is-an-invalid-token';
+    const response = await request(app).post(`/api/1.0/users/token/${token}`);
+    expect(response.body.path).toEqual(`/api/1.0/users/token/${token}`);
+  });
+
+  it('returns timestamp in milliseconds on the error response body', async () => {
+    const now = new Date().getTime();
+    const fiveSecondsFromNow = now + 5000;
+    const token = 'this-is-an-invalid-token';
+    const response = await request(app).post(`/api/1.0/users/token/${token}`);
+    expect(response.body.timestamp).toBeGreaterThan(now);
+    expect(response.body.timestamp).toBeLessThan(fiveSecondsFromNow);
   });
 });
 

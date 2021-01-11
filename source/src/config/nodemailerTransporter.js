@@ -1,13 +1,12 @@
 const nodemailer = require('nodemailer');
+const config = require('config');
+
+const mailConfig = config.get('mail');
 // eslint-disable-next-line import/no-extraneous-dependencies
 // const nodemailerStub = require('nodemailer-stub'); replaced with STMPServer
 
-const transporter = nodemailer.createTransport({
-  host: 'localhost',
-  port: 8587,
-  tls: { rejectUnauthorized: false },
-});
-
+const transporter = nodemailer.createTransport({ ...mailConfig });
+// ? porque no directamente mailConfig en lugar de { ...mailConfig }? Lo probe y anda
 // transporter debugger. Uncomment to check for errors
 /**
 transporter.verify(function (error, success) {
