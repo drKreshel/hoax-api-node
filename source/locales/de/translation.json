@@ -11,5 +11,9 @@
   "email_failure": "E-Mail-Fehler",
   "account_activation_failure": "Dieses Konto ist entweder aktiv oder das Token ist ungültig",
   "account_activation_success": "Das Konto wurde erfolgreich aktiviert",
-  "validation_failure": "Validierungsfehler gefunden"
+  "validation_failure": "Validierungsfehler gefunden",
+  "user_not_found": "User wurde nicht gefunden",
+  "authentication_failure": "Falsche Anmeldeinformationen",
+  "inactive_authentication_failure": "User ist nicht aktiviert",
+  "unauthorized_user_update": "Sie haben keine Berechtigung um den User zu aktualisieren"
 }

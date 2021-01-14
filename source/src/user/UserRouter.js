@@ -1,59 +1,22 @@
 const express = require('express');
-const { check, body, validationResult } = require('express-validator');
 const UserService = require('./UserService');
-const ValidationException = require('../error/ValidationException');
+const pagination = require('../middleware/pagination');
+const registrationValidation = require('../middleware/registrationValidation');
+const ForbiddenException = require('../error/ForbiddenException');
+const basicAuthentication = require('../middleware/basicAuthentication');
 
 const router = express.Router();
 
-router.get('/ping', (req, res) => {
-  res.send('pong');
-});
-
 /// POST api/1.0/users
-router.post(
-  '/',
-  check('username', 'username_size') // can also be passed here
-    .notEmpty()
-    .withMessage('username_null')
-    .bail() // if an error is found up to this point, it won't continue checking
-    .isLength({ min: 4, max: 32 }),
-  // .withMessage('username_size'), // check replaced the above validators
-  check('email')
-    .notEmpty()
-    .withMessage('email_null')
-    .bail()
-    .isEmail()
-    .withMessage('email_invalid')
-    .bail()
-    .custom(async (email) => {
-      const user = await UserService.findOneByEmail(email);
-      if (user) {
-        throw new Error('email_in_use');
-      }
-    }),
-  check('password')
-    .notEmpty()
-    .withMessage('password_null')
-    .bail()
-    .isLength({ min: 6 })
-    .withMessage('password_size')
-    .bail()
-    .matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/)
-    .withMessage('password_pattern'),
-  async (req, res, next) => {
-    const errors = validationResult(req).errors;
-    if (errors.length) {
-      return next(new ValidationException(errors));
-      // return res.status(400).send({ validationErrors });
-    }
-    try {
-      await UserService.save(req.body);
-      return res.status(200).send({ message: req.t('user_create_success') });
-    } catch (err) {
-      return next(err);
-    }
+router.post('/', registrationValidation, async (req, res, next) => {
+  try {
+    await UserService.postUser(req.body);
+    return res.status(200).send({ message: req.t('user_create_success') });
+  } catch (err) {
+    return next(err);
   }
-);
+});
+// From express documentation: If you pass anything to the next() function (except the string 'route'), Express regards the current request as being an error and will skip any remaining non-error handling routing and middleware functions.
 
 // POST api/1.0/users/token/:token
 router.post('/token/:token', async (req, res, next) => {
@@ -65,4 +28,37 @@ router.post('/token/:token', async (req, res, next) => {
     return next(err); // sin el return continua la ejecución
   }
 });
+
+router.get('/', pagination, async (req, res) => {
+  const { page, size } = req.pagination;
+  const users = await UserService.getUsers({ page, size });
+  res.status(200).send(users);
+});
+
+router.get('/:id', async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const user = await UserService.getUser(id);
+    return res.status(200).send(user);
+  } catch (err) {
+    return next(err);
+  }
+});
+// if the function is async you need to pass the error via "next(new UserNotFoundException())". Otherwise you can just call "throw new UserNotFoundException()"
+let counter = 0;
+router.put('/:id', basicAuthentication, async (req, res, next) => {
+  // eslint-disable-next-line no-plusplus
+  console.log('_________________', counter++, '______________________ ',req.authenticatedUser);
+  if (!req.authenticatedUser || req.authenticatedUser.id != req.params.id) {
+    return next(new ForbiddenException(req.t('unauthorized_user_update')));
+  }
+  await UserService.updateUser(req.params.id, req.body);
+  /** another way to do the above
+    Object.assign(user, req.body);
+    console.log('user.save___________________________');
+    await user.save();
+     */
+  return res.status(200).send('User data modified successfully'); // todo: internalization
+});
+
 module.exports = router;

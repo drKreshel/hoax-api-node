@@ -7,6 +7,10 @@ const sequelize = require('../src/config/database');
 const User = require('../src/user/User');
 // const EmailService = require('../src/email/EmailService'); // not needed with SMTP server
 
+// languages
+const en = require('../locales/en/translation.json');
+const de = require('../locales/de/translation.json');
+
 let lastMail, server, simulateSMTPFailure;
 
 beforeAll(async () => {
@@ -31,17 +35,20 @@ beforeAll(async () => {
   });
 
   server.listen(8587, 'localhost');
-
   await sequelize.sync();
+
+  // assures that SMTP server is up before tests
+  jest.setTimeout(20000);
 });
 
-beforeEach(() => {
+beforeEach(async () => {
   simulateSMTPFailure = false;
-  return User.destroy({ truncate: true });
+  await User.destroy({ truncate: true });
 });
 
 afterAll(async () => {
   await server.close();
+  jest.setTimeout(5000);
 });
 
 const postUser = (
@@ -61,7 +68,7 @@ describe('User registration', () => {
 
   it(`returns success mesage when signup request is valid`, async () => {
     const response = await postUser();
-    expect(response.body.message).toBe('User created successfully');
+    expect(response.body.message).toBe(en.user_create_success);
   });
 
   it('saves the user in the database', async () => {
@@ -88,7 +95,7 @@ describe('User registration', () => {
     expect(response.status).toBe(400);
   });
 
-  it('returns validationErrors field in response body when validation errors occurs', async () => {
+  it('returns validationErrors field in response body when validation errors occurs in register form', async () => {
     const response = await postUser({ username: null });
     const body = response.body;
     expect(body.validationErrors).not.toBeUndefined();
@@ -142,42 +149,35 @@ describe('User registration', () => {
   //   expect(body.validationErrors[field]).toBe(expectedMessage);
   // });
   // using table jest method
-  const username_null = 'Username cannot be null';
-  const username_size = 'Username field must have a minimum 4 and a maximum of 32 characters';
-  const email_null = 'E-mail cannot be null';
-  const email_invalid = 'E-mail is not valid';
-  const password_null = 'Password cannot be null';
-  const password_size = 'Password must have at least 6 characters';
-  const password_pattern = 'Password must have at least one uppercase, one lowercase letter and one number';
-  const email_in_use = 'Email is already in use';
+
   it.each`
     field         | value               | expectedMessage
-    ${'username'} | ${null}             | ${username_null}
-    ${'username'} | ${'usr'}            | ${username_size}
-    ${'username'} | ${'a'.repeat(33)}   | ${username_size}
-    ${'email'}    | ${null}             | ${email_null}
-    ${'email'}    | ${'mail.com'}       | ${email_invalid}
-    ${'email'}    | ${'user1@mail'}     | ${email_invalid}
-    ${'email'}    | ${'user1.mail.com'} | ${email_invalid}
-    ${'password'} | ${null}             | ${password_null}
-    ${'password'} | ${'P4ssw'}          | ${password_size}
-    ${'password'} | ${'alllowercase'}   | ${password_pattern}
-    ${'password'} | ${'ALLUPPERCASE'}   | ${password_pattern}
-    ${'password'} | ${'123456'}         | ${password_pattern}
-    ${'password'} | ${'lower&UPPER'}    | ${password_pattern}
-    ${'password'} | ${'lower&1234'}     | ${password_pattern}
-    ${'password'} | ${'1234&UPPER'}     | ${password_pattern}
+    ${'username'} | ${null}             | ${en.username_null}
+    ${'username'} | ${'usr'}            | ${en.username_size}
+    ${'username'} | ${'a'.repeat(33)}   | ${en.username_size}
+    ${'email'}    | ${null}             | ${en.email_null}
+    ${'email'}    | ${'mail.com'}       | ${en.email_invalid}
+    ${'email'}    | ${'user1@mail'}     | ${en.email_invalid}
+    ${'email'}    | ${'user1.mail.com'} | ${en.email_invalid}
+    ${'password'} | ${null}             | ${en.password_null}
+    ${'password'} | ${'P4ssw'}          | ${en.password_size}
+    ${'password'} | ${'alllowercase'}   | ${en.password_pattern}
+    ${'password'} | ${'ALLUPPERCASE'}   | ${en.password_pattern}
+    ${'password'} | ${'123456'}         | ${en.password_pattern}
+    ${'password'} | ${'lower&UPPER'}    | ${en.password_pattern}
+    ${'password'} | ${'lower&1234'}     | ${en.password_pattern}
+    ${'password'} | ${'1234&UPPER'}     | ${en.password_pattern}
   `('returns "$expectedMessage" when $field is "$value"', async ({ field, value, expectedMessage }) => {
     const response = await postUser({ [field]: value });
     const body = response.body;
     expect(body.validationErrors[field]).toBe(expectedMessage);
   });
 
-  it(`returns "${email_in_use}" when same email is already in the database`, async () => {
+  it(`returns "${en.email_in_use}" when same email is already in the database`, async () => {
     await User.create({ username: 'user1', email: 'user1@mail.com', password: 'P4ssword' });
     const response = await postUser();
     const body = response.body;
-    expect(body.validationErrors.email).toBe('E-mail is already in use');
+    expect(body.validationErrors.email).toBe(en.email_in_use);
   });
 
   it('returns errors for both, username is null and email is in use', async () => {
@@ -229,7 +229,7 @@ describe('User registration', () => {
   it('returns "Email failure" message when sending email fails', async () => {
     simulateSMTPFailure = true;
     const response = await postUser();
-    expect(response.body.message).toBe('E-mail failure');
+    expect(response.body.message).toBe(en.email_failure);
   });
 
   // if mail fails, we should not add the user to the database
@@ -242,46 +242,33 @@ describe('User registration', () => {
 
   it('returns "Validation failure" error message when validation errors occurs', async () => {
     const response = await postUser({ username: null });
-    expect(response.body.message).toBe('Validation failure');
+    expect(response.body.message).toBe(en.validation_failure);
   });
 });
 
 describe('Internalization', () => {
-  const user_create_success = 'User wurde erfolgreich erstellt';
-  const username_null = 'Username darf nicht null sein';
-  const username_size = 'Das Feld username muss mindestens 4 und höchstens 32 Zeichen lang sein.';
-  const email_null = 'E-Mail darf nicht null sein';
-  const email_invalid = 'E-Mail ist ungültig';
-  const password_null = 'Passwort darf nicht null sein';
-  const password_size = 'Passwort muss mindestens 6 Zeichen haben';
-  const password_pattern =
-    'Das Passwort muss mindestens einen Großbuchstaben, einen Kleinbuchstaben und eine Zahl enthalten';
-  const email_in_use = 'E-Mail wird bereits verwendet';
-  const email_failure = 'E-Mail-Fehler';
-  const validation_failure = 'Validierungsfehler gefunden';
-
-  it(`returns "${user_create_success}" when signup request is valid and language is set to german`, async () => {
+  it(`returns "${de.user_create_success}" when signup request is valid and language is set to german`, async () => {
     const response = await postUser({}, 'de');
-    expect(response.body.message).toBe(user_create_success);
+    expect(response.body.message).toBe(de.user_create_success);
   });
 
   it.each`
     field         | value               | expectedMessage
-    ${'username'} | ${null}             | ${username_null}
-    ${'username'} | ${'usr'}            | ${username_size}
-    ${'username'} | ${'a'.repeat(33)}   | ${username_size}
-    ${'email'}    | ${null}             | ${email_null}
-    ${'email'}    | ${'mail.com'}       | ${email_invalid}
-    ${'email'}    | ${'user1@mail'}     | ${email_invalid}
-    ${'email'}    | ${'user1.mail.com'} | ${email_invalid}
-    ${'password'} | ${null}             | ${password_null}
-    ${'password'} | ${'P4ssw'}          | ${password_size}
-    ${'password'} | ${'alllowercase'}   | ${password_pattern}
-    ${'password'} | ${'ALLUPPERCASE'}   | ${password_pattern}
-    ${'password'} | ${'123456'}         | ${password_pattern}
-    ${'password'} | ${'lower&UPPER'}    | ${password_pattern}
-    ${'password'} | ${'lower&1234'}     | ${password_pattern}
-    ${'password'} | ${'1234&UPPER'}     | ${password_pattern}
+    ${'username'} | ${null}             | ${de.username_null}
+    ${'username'} | ${'usr'}            | ${de.username_size}
+    ${'username'} | ${'a'.repeat(33)}   | ${de.username_size}
+    ${'email'}    | ${null}             | ${de.email_null}
+    ${'email'}    | ${'mail.com'}       | ${de.email_invalid}
+    ${'email'}    | ${'user1@mail'}     | ${de.email_invalid}
+    ${'email'}    | ${'user1.mail.com'} | ${de.email_invalid}
+    ${'password'} | ${null}             | ${de.password_null}
+    ${'password'} | ${'P4ssw'}          | ${de.password_size}
+    ${'password'} | ${'alllowercase'}   | ${de.password_pattern}
+    ${'password'} | ${'ALLUPPERCASE'}   | ${de.password_pattern}
+    ${'password'} | ${'123456'}         | ${de.password_pattern}
+    ${'password'} | ${'lower&UPPER'}    | ${de.password_pattern}
+    ${'password'} | ${'lower&1234'}     | ${de.password_pattern}
+    ${'password'} | ${'1234&UPPER'}     | ${de.password_pattern}
   `(
     'returns "$expectedMessage" when $field is "$value" when language is set as german',
     async ({ field, value, expectedMessage }) => {
@@ -291,22 +278,22 @@ describe('Internalization', () => {
     }
   );
 
-  it(`returns "${email_in_use}" when same email is already in the database and language is set as german`, async () => {
+  it(`returns "${de.email_in_use}" when same email is already in the database and language is set as german`, async () => {
     await User.create({ username: 'user1', email: 'user1@mail.com', password: 'P4ssword' });
     const response = await postUser({}, 'de');
     const body = response.body;
-    expect(body.validationErrors.email).toBe(email_in_use);
+    expect(body.validationErrors.email).toBe(de.email_in_use);
   });
 
-  it(`returns "${email_failure}" message when sending email fails and language is set to german`, async () => {
+  it(`returns "${de.email_failure}" message when sending email fails and language is set to german`, async () => {
     simulateSMTPFailure = true;
     const response = await postUser({}, 'de');
-    expect(response.body.message).toBe(email_failure);
+    expect(response.body.message).toBe(de.email_failure);
   });
 
-  it(`returns "${validation_failure}" error message when validation errors occurs and language is set to german`, async () => {
+  it(`returns "${de.validation_failure}" error message when validation errors occurs and language is set to german`, async () => {
     const response = await postUser({ username: null }, 'de');
-    expect(response.body.message).toBe(validation_failure);
+    expect(response.body.message).toBe(de.validation_failure);
   });
 });
 
@@ -350,10 +337,10 @@ describe('User activation', () => {
 
   it.each`
     language | tokenStatus  | message
-    ${'de'}  | ${'invalid'} | ${'Dieses Konto ist entweder aktiv oder das Token ist ungültig'}
-    ${'en'}  | ${'invalid'} | ${'This account is either active or the token is invalid'}
-    ${'de'}  | ${'valid'}   | ${'Das Konto wurde erfolgreich aktiviert'}
-    ${'en'}  | ${'valid'}   | ${'The account was succesfully activated'}
+    ${'de'}  | ${'invalid'} | ${de.account_activation_failure}
+    ${'en'}  | ${'invalid'} | ${en.account_activation_failure}
+    ${'de'}  | ${'valid'}   | ${de.account_activation_success}
+    ${'en'}  | ${'valid'}   | ${en.account_activation_success}
   `(
     'returns "$message" when token is $tokenStatus and language is set to $langauge',
     async ({ language, tokenStatus, message }) => {
@@ -363,7 +350,9 @@ describe('User activation', () => {
         const users = await User.findAll();
         token = users[0].activationToken;
       }
-      const response = await request(app).post(`/api/1.0/users/token/${token}`).set({ 'Accept-Language': language });
+      const response = await request(app)
+        .post(`/api/1.0/users/token/${token}`)
+        .set({ 'Accept-Language': language });
       expect(response.body.message).toBe(message);
     }
   );
