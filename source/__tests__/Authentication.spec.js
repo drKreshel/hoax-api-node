@@ -15,7 +15,7 @@ beforeEach(async () => {
   await User.destroy({ truncate: true });
 });
 
-const postAndGetUser = async ({
+const postUser = async ({
   username = 'user1',
   email = 'user1@mail.com',
   password = 'P4ssword',
@@ -31,17 +31,17 @@ const postAuthentication = (credentials = {}, options = { language: 'en' }) => {
 
 describe('User authentication', () => {
   it('returns status "200" ok when credentials are correct', async () => {
-    await postAndGetUser();
+    await postUser();
     const response = await postAuthentication({ email: 'user1@mail.com', password: 'P4ssword' });
     expect(response.status).toBe(200);
   });
 
-  it('returns only id and username on login success', async () => {
-    const user = await postAndGetUser();
+  it('returns id, username and session token on login success', async () => {
+    const user = await postUser();
     const response = await postAuthentication({ email: 'user1@mail.com', password: 'P4ssword' });
     expect(response.body.id).toBe(user.id);
     expect(response.body.username).toBe(user.username);
-    expect(Object.keys(response.body)).toEqual(['id', 'username']);
+    expect(Object.keys(response.body)).toEqual(['id', 'username', 'token']);
   });
 
   it('returns status "401" when user does not exists', async () => {
@@ -75,19 +75,19 @@ describe('User authentication', () => {
   );
 
   it('returns status "401" when password is incorrect', async () => {
-    await postAndGetUser();
+    await postUser();
     const response = await postAuthentication({ email: 'user1@mail.com', password: 'incorrect password' });
     expect(response.status).toBe(401);
   });
 
   it('returns status "403 forbidden" logging in with inactive account', async () => {
-    await postAndGetUser({ inactive: true });
+    await postUser({ inactive: true });
     const response = await postAuthentication({ email: 'user1@mail.com', password: 'P4ssword' });
     expect(response.status).toBe(403);
   });
 
   it('returns proper error body when user is inactive', async () => {
-    await postAndGetUser({ inactive: true });
+    await postUser({ inactive: true });
     const now = new Date().getTime();
     const response = await postAuthentication({ email: 'user1@mail.com', password: 'P4ssword' });
     expect(response.body.path).toBe('/api/1.0/auth');
@@ -102,7 +102,7 @@ describe('User authentication', () => {
   `(
     'returns "$message" when user is inactive and language is set as "$language"',
     async ({ message, language }) => {
-      await postAndGetUser({ inactive: true });
+      await postUser({ inactive: true });
       const response = await postAuthentication(
         { email: 'user1@mail.com', password: 'P4ssword' },
         { language }
@@ -124,5 +124,11 @@ describe('User authentication', () => {
   it('returns validationErrors field in response body when validation errors occurs in login form', async () => {
     const response = await postAuthentication();
     expect(response.body.validationErrors).not.toBeUndefined();
+  });
+
+  it('returns token in response body when credentials are valid', async () => {
+    await postUser();
+    const response = await postAuthentication({ email: 'user1@mail.com', password: 'P4ssword' });
+    expect(response.body.token).not.toBeUndefined();
   });
 });

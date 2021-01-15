@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const User = require('../user/User');
 const UserService = require('../user/UserService');
+const TokenService = require('./TokenService');
 const AuthenticationException = require('./AuthenticationException');
 const ForbiddenException = require('../error/ForbiddenException');
 const loginValidation = require('../middleware/loginValidation');
@@ -18,8 +18,9 @@ router.post('/api/1.0/auth', loginValidation, async (req, res, next) => {
   if (!match) return next(new AuthenticationException()); // 401
 
   if (user.inactive) return next(new ForbiddenException()); // 403
-
-  return res.status(200).send({ id: user.id, username: user.username });
+  const token = await TokenService.createToken({ id: user.id });
+  console.log('TOOKEN', token);
+  return res.status(200).send({ id: user.id, username: user.username, token });
 });
 
 module.exports = router;

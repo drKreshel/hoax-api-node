@@ -25,23 +25,36 @@ const postUser = async ({
   return User.create({ username, email, password: hashedPassword, inactive });
 };
 
-const putUser = ({ id = 5, body = {}, auth, language } = {}) => {
+const putUser = async ({ id = 5, body = {}, auth = {}, language } = {}) => {
+  let token;
   const agent = request(app).put(`/api/1.0/users/${id}`);
-  if (language) {
-    agent.set('Accept-Language', language);
-  }
-  if (auth) {
-    const { email, password } = auth;
-    const str = `${email}:${password}`;
-    // convert string to base 64
-    const base64 = Buffer.from(str).toString('base64');
-    agent.set('Authorization', `Basic ${base64}`);
 
-    // in supertest agent you can do it like this:
-    /*
+  // in case we wan't to pass a token ourselves (a wrong one)
+  if (auth.token) token = auth.token;
+  // in case there is auth but no token is passed, we create a login to retrieve a valid token
+  else {
+    const response = await request(app)
+      .post('/api/1.0/auth')
+      .send({ email: auth.email || 'user1@mail.com', password: auth.password || 'P4ssword' });
+    token = response.body.token;
+  }
+
+  // in case login was succesful or a token object was passed to auth,we assign token to http authorization headers
+  if (token) {
+    agent.set('Authorization', `Bearer ${token}`);
+    /** // create Authorization header
+      const str = `${email}:${password}`;
+      const base64 = Buffer.from(str).toString('base64');
+      agent.set('Authorization', `Basic ${base64}`);
+    */
+    /* // with supertest agent you can also set it like this:
       agent.auth(email, password)
     */
   }
+  if (language) {
+    agent.set('Accept-Language', language);
+  }
+
   return agent.send(body);
 };
 
@@ -61,7 +74,7 @@ describe('User update', () => {
     'returns error body with message:"$message" for unauthorized request and language is set to $language',
     async ({ language, message }) => {
       const now = new Date().getTime();
-      const response = await putUser({ language }).send();
+      const response = await putUser({ language });
       expect(response.body.message).toBe(message);
       expect(response.body.timestamp).toBeGreaterThan(now);
       expect(response.body.path).toBe('/api/1.0/users/5');
@@ -126,8 +139,17 @@ describe('User update', () => {
       body: { username: 'a-new-name' },
       auth: { email: user.email, password: 'P4ssword' },
     });
-
     const dbUser = await User.findOne({ where: { id: user.id } });
     expect(dbUser.username).toBe('a-new-name');
+  });
+
+  // 9
+  it('returns "403" forbidden when token is not valid', async () => {
+    const response = await putUser({
+      id: 5,
+      body: { username: 'a-new-name' },
+      auth: { token: 'invalid-token' },
+    });
+    expect(response.status).toBe(403);
   });
 });

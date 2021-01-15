@@ -87,6 +87,7 @@ describe('User registration', () => {
   it('hashes the password when before saving in the database', async () => {
     await postUser();
     const user = await User.findAll(); // TODO: cambiar a findOne?
+    console.log('USEEER', user);
     expect(user[0].password).not.toBe('P4ssword');
   });
 

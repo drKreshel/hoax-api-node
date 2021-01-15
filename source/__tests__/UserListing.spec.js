@@ -1,4 +1,5 @@
 const request = require('supertest');
+const bcrypt = require('bcrypt');
 const app = require('../src/app');
 const sequelize = require('../src/config/database');
 const User = require('../src/user/User');
@@ -15,17 +16,44 @@ beforeEach(async () => {
   await User.destroy({ truncate: true });
 });
 
-const getUsers = () => {
-  return request(app).get('/api/1.0/users');
+const getUsers = async (options = {}) => {
+  let token;
+  const agent = request(app).get('/api/1.0/users');
+
+  if (options.query) {
+    agent.query(options.query);
+  }
+
+  if (options.auth) {
+    if (options.auth.token) {
+      agent.set('Authorization', `Bearer ${options.auth.token}`);
+    } else {
+      const email = options.auth.email || 'user1@mail.com';
+      const password = options.auth.password || 'P4ssword';
+      const response = await request(app).post('/api/1.0/auth').send({ email, password });
+      token = response.body.token;
+    }
+
+    if (token) {
+      agent.set('Authorization', `Bearer ${token}`);
+    }
+  }
+  return agent;
 };
 
-const postUsers = (n, m = 0) => {
+const postUsers = async (n, m = 0) => {
   // n: "amount of active users to post" / m: amunt of inactive users
+  const hashedPassword = await bcrypt.hash('P4ssword', 10);
   const usersArr = [];
   for (let i = 0; i < n + m; i += 1) {
-    usersArr.push({ username: `user${i + 1}`, email: `user${i + 1}@mail.com`, inactive: i >= n });
+    usersArr.push({
+      username: `user${i + 1}`,
+      email: `user${i + 1}@mail.com`,
+      password: hashedPassword,
+      inactive: i >= n,
+    });
   }
-  return User.bulkCreate(usersArr, { raw: true }); // raw: akind ".lean()"" from mongodb
+  return User.bulkCreate(usersArr, { raw: true }); // raw: akin to ".lean()"" from mongodb
 };
 
 // get a user by id, default for testing: 5
@@ -78,42 +106,49 @@ describe('Listing Users', () => {
 
   it('returns second page of user and a "page indicator" when page is set as "1"', async () => {
     await postUsers(11);
-    const response = await getUsers().query({ page: 1 }); // can also append "?page=1" to the route instead of using query
+    const response = await getUsers({ query: { page: 1 } }); // can also append "?page=1" to the route instead of using query
     expect(response.body.content[0].username).toEqual('user11');
     expect(response.body.page).toBe(1);
   });
 
   it('returns first page when page is set below "0"', async () => {
-    const response = await getUsers().query({ page: -5 });
+    const response = await getUsers({ query: { page: -5 } });
     expect(response.body.page).toBe(0);
   });
 
   it('returns five users and corresponding size indicator when size is set as "5" in request', async () => {
     await postUsers(11);
-    const response = await getUsers().query({ size: 5 });
+    const response = await getUsers({ query: { size: 5 } });
     expect(response.body.size).toBe(5);
     expect(response.body.content.length).toBe(5);
   });
 
   it('returns 10 users as default if size is set below 0', async () => {
     await postUsers(11);
-    const response = await getUsers().query({ size: -2 });
+    const response = await getUsers({ query: { size: -2 } });
     expect(response.body.size).toBe(10);
   });
 
   it('returns maximum 10 users if size is larger than that', async () => {
     // prevent users to spam huge requests
     await postUsers(11);
-    const response = await getUsers().query({ size: 1000 });
+    const response = await getUsers({ query: { size: 1000 } });
     expect(response.body.size).toBe(10);
     expect(response.body.content.length).toBe(10);
   });
 
   it('returns page and size defaults when non numeric parameters are entered', async () => {
     await postUsers(11);
-    const response = await getUsers().query({ size: 'very big', page: 'an important page' });
+    const response = await getUsers({ query: { size: 'very big', page: 'an important page' } });
     expect(response.body.content.length).toBe(10);
     expect(response.body.page).toBe(0);
+  });
+
+  it('returns users page list without the logged user', async () => {
+    await postUsers(11);
+    const response = await getUsers({ auth: { email: 'user1@mail.com', password: 'P4ssword' } });
+    // 11 users page count should be 2, but if it excludes our user, then it should be 1
+    expect(response.body.totalPages).toBe(1);
   });
 });
 
