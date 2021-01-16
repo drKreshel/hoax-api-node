@@ -2,14 +2,16 @@ const TokenService = require('../auth/TokenService');
 
 const tokenAuthentication = async (req, res, next) => {
   const { authorization } = req.headers;
-
   // if http request has got header "authorization" then enters this block and set req.authenticateduser
   if (authorization) {
     const token = authorization.substring(7);
+    console.log(token);
     try {
       const user = await TokenService.verify(token);
       req.authenticatedUser = user;
-    } catch {
+    } catch (err) {
+      // catch an error here when token is null, sequelize will throw an error when a "where" parameter is sent null
+      console.log('entra al catch de tokenAuthentication', err);
       // no need to pass anything here, code block will continue with next to put route and put route will handle the error
     }
     // if (user && !user.inactive) req.authenticatedUser = user;

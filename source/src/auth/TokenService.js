@@ -16,7 +16,11 @@ const verify = async (token) => {
   return { id: userId };
 };
 
-module.exports = { createToken, verify };
+const deleteToken = async (token) => {
+  await Token.destroy({ where: { token } });
+};
+
+module.exports = { createToken, verify, deleteToken };
 
 /**
  *                  JWT Token
@@ -31,7 +35,6 @@ module.exports = { createToken, verify };
   };
 
   const verify = (token) => {
-    console.log('TOKEN EN VERIFY', token);
     return jwt.verify(token, 'ultra-dog&superfluos-cat');
   };
  */

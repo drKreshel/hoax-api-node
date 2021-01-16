@@ -15,5 +15,6 @@
   "user_not_found": "User wurde nicht gefunden",
   "authentication_failure": "Falsche Anmeldeinformationen",
   "inactive_authentication_failure": "User ist nicht aktiviert",
-  "unauthorized_user_update": "Sie haben keine Berechtigung um den User zu aktualisieren"
+  "unauthorized_user_update": "Sie haben keine Berechtigung um den User zu aktualisieren",
+  "unauthorized_user_loggout": "Ungültiges Token oder fehlendes Token zum Abmelden"
 }

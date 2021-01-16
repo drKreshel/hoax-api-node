@@ -15,5 +15,6 @@
   "user_not_found": "User not found",
   "authentication_failure": "Incorrect credentials",
   "inactive_authentication_failure": "User is not activated",
-  "unauthorized_user_update": "You are not authorized to update the user"
+  "unauthorized_user_update": "You are not authorized to update the user",
+  "unauthorized_user_loggout": "Invalid token or missing token to log out"
 }

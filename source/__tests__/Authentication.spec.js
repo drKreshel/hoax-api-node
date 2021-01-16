@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const app = require('../src/app');
 const sequelize = require('../src/config/database');
 const User = require('../src/user/User');
+const Token = require('../src/auth/Token');
 // languages
 const en = require('../locales/en/translation.json');
 const de = require('../locales/de/translation.json');
@@ -25,8 +26,19 @@ const postUser = async ({
   return User.create({ username, email, password: hashedPassword, inactive });
 };
 
-const postAuthentication = (credentials = {}, options = { language: 'en' }) => {
+const postAuthentication = (
+  credentials = { email: 'user1@mail.com', password: 'P4ssword' },
+  options = { language: 'en' }
+) => {
   return request(app).post('/api/1.0/auth').set('Accept-Language', options.language).send(credentials); // "send" is to emulate data sent through req.body
+};
+
+const postLogout = (options = {}) => {
+  const agent = request(app).post(`/api/1.0/logout/${options.id}`);
+  if (options.token) {
+    agent.set('Authorization', `Bearer ${options.token}`);
+  }
+  return agent.send();
 };
 
 describe('User authentication', () => {
@@ -122,7 +134,7 @@ describe('User authentication', () => {
   });
 
   it('returns validationErrors field in response body when validation errors occurs in login form', async () => {
-    const response = await postAuthentication();
+    const response = await postAuthentication({ email: null });
     expect(response.body.validationErrors).not.toBeUndefined();
   });
 
@@ -130,5 +142,29 @@ describe('User authentication', () => {
     await postUser();
     const response = await postAuthentication({ email: 'user1@mail.com', password: 'P4ssword' });
     expect(response.body.token).not.toBeUndefined();
+  });
+});
+
+describe('Logout', () => {
+  it('returns "403" forbidden when unauthorized logout request is received', async () => {
+    // this means a user without valid token tries to logout,
+    const response = await postLogout();
+    expect(response.status).toBe(403);
+  });
+
+  it('removes the session token from the database', async () => {
+    const user = await postUser();
+    const response = await postAuthentication();
+    const token = response.body.token;
+    await postLogout({ id: user.id, token });
+    const dbToken = await Token.findOne({ where: { token } });
+    expect(dbToken).toBeNull();
+  });
+
+  it('returns "403" unauthorized when invalid token is sent', async () => {
+    const user = await postUser();
+    await postAuthentication();
+    const response = await postLogout({ id: user.id, token: 'invalid-token' });
+    expect(response.status).toBe(403);
   });
 });
