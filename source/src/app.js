@@ -1,12 +1,15 @@
 const express = require('express');
+
 // Internalization
 const i18next = require('i18next');
 const Backend = require('i18next-fs-backend');
 const middleware = require('i18next-http-middleware');
 // Routers
 const UserRouter = require('./user/UserRouter');
-const AuthenticationRouter = require('./auth/AuthenticationRouter')
+const AuthenticationRouter = require('./auth/AuthenticationRouter');
 const errorHandler = require('./error/errorHandler');
+const tokenAuthentication = require('./middleware/tokenAuthentication');
+
 
 i18next
   .use(Backend)
@@ -29,6 +32,10 @@ const app = express();
 app.use(middleware.handle(i18next));
 app.use(express.json());
 
+// instead of putting tokenAuthentication middleware on each route. Only verifies and updates token if authorization header is sent
+app.use(tokenAuthentication);
+
+// routes
 app.use('/api/1.0/users', UserRouter);
 app.use('/', AuthenticationRouter);
 

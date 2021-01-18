@@ -7,6 +7,7 @@ const sequelize = require('../config/database');
 const InvalidTokenException = require('./InvalidTokenException');
 const UserNotFoundException = require('./UserNotFoundException');
 const { randomString } = require('../shared/generator');
+const TokenService = require('../auth/TokenService');
 
 const getUserByEmail = (email) => User.findOne({ where: { email } });
 
@@ -82,4 +83,15 @@ const updateUser = (id, body) => {
   return User.update(body, { where: { id } }); // {returning: true} only works with postgres (psql)
 };
 
-module.exports = { postUser, getUserByEmail, activateAccount, getUsers, getUser, updateUser };
+const deleteUser = (id) => {
+  return User.destroy({ where: { id } });
+  /** This code is for destroying Tokens manually. (On Delete cascade in model
+   *  wasn't working properly before)
+   */
+  //* return Promise.all([
+  //*   User.destroy({ where: { id } }),
+  //*   TokenService.deleteAllTokensFromUser(id)
+  //* ])
+};
+
+module.exports = { postUser, getUserByEmail, activateAccount, getUsers, getUser, updateUser, deleteUser };

@@ -2,7 +2,7 @@ const request = require('supertest');
 const bcrypt = require('bcrypt');
 const app = require('../src/app');
 const sequelize = require('../src/config/database');
-const User = require('../src/user/User');
+const { User } = require('../src/associations');
 // languages
 const en = require('../locales/en/translation.json');
 const de = require('../locales/de/translation.json');
@@ -12,7 +12,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await User.destroy({ truncate: true });
+  await User.destroy({ truncate: { cascade: true } });
 });
 
 const postUser = async ({

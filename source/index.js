@@ -1,8 +1,9 @@
 const bcrypt = require('bcrypt');
+
 const app = require('./src/app');
 const sequelize = require('./src/config/database');
-
 const User = require('./src/user/User');
+const TokenService = require('./src/auth/TokenService');
 
 const postUsers = async (n, m = 0) => {
   const hashedPassword = await bcrypt.hash('P4ssword', 10);
@@ -22,6 +23,8 @@ const postUsers = async (n, m = 0) => {
 sequelize.sync({ force: true }).then(async () => {
   await postUsers(25);
 });
+
+TokenService.scheduledCleanup();
 app.listen(3000, () => console.log('SERVER RUNNING AT PORT 3000'));
 
 module.exports = app;

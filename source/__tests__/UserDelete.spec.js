@@ -2,7 +2,8 @@ const request = require('supertest');
 const bcrypt = require('bcrypt');
 const app = require('../src/app');
 const sequelize = require('../src/config/database');
-const User = require('../src/user/User');
+const { User } = require('../src/associations');
+const { Token } = require('../src/associations');
 // languages
 const en = require('../locales/en/translation.json');
 const de = require('../locales/de/translation.json');
@@ -12,69 +13,64 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await User.destroy({ truncate: true });
+  await User.destroy({ truncate: { cascade: true } });
 });
 
-const postUser = async ({
-  username = 'user1',
-  email = 'user1@mail.com',
-  password = 'P4ssword',
-  inactive = false,
-} = {}) => {
+const user1 = {
+  username: 'user1',
+  email: 'user1@mail.com',
+  password: 'P4ssword',
+  inactive: false,
+};
+const credentials = { email: 'user1@mail.com', password: 'P4ssword' };
+
+const user2 = {
+  username: 'user2',
+  email: 'user2@mail.com',
+  password: 'P4ssword',
+  inactive: false,
+};
+
+const postUser = async ({ username, email, password, inactive } = {}) => {
   const hashedPassword = await bcrypt.hash(password, 10);
   return User.create({ username, email, password: hashedPassword, inactive });
 };
 
-const putUser = async ({ id = 5, body = {}, auth = {}, language } = {}) => {
-  let token;
-  const agent = request(app).put(`/api/1.0/users/${id}`);
+const loginUser = async ({ email, password }) => {
+  const response = await request(app).post('/api/1.0/auth').send({ email, password });
+  return response.body;
+};
 
-  // in case we wan't to pass a token ourselves (a wrong one)
-  if (auth.token) token = auth.token;
-  // in case there is auth but no token is passed, we create a login to retrieve a valid token
-  else {
-    const response = await request(app)
-      .post('/api/1.0/auth')
-      .send({ email: auth.email || 'user1@mail.com', password: auth.password || 'P4ssword' });
-    token = response.body.token;
-  }
+const deleteUser = async ({ id, token, language } = {}) => {
+  const agent = request(app).delete(`/api/1.0/users/${id}`);
 
-  // in case login was succesful or a token object was passed to auth,we assign token to http authorization headers
   if (token) {
     agent.set('Authorization', `Bearer ${token}`);
-    /** // create Authorization header
-      const str = `${email}:${password}`;
-      const base64 = Buffer.from(str).toString('base64');
-      agent.set('Authorization', `Basic ${base64}`);
-    */
-    /* // with supertest agent you can also set it like this:
-      agent.auth(email, password)
-    */
   }
   if (language) {
     agent.set('Accept-Language', language);
   }
 
-  return agent.send(body);
+  return agent.send();
 };
 
-describe('User update', () => {
+describe('User delete', () => {
   // 0
-  it('returns "403" forbidden when request is sent without basic authorization', async () => {
-    const response = await putUser();
+  it('returns "403" forbidden when request is sent unauthorized', async () => {
+    const response = await deleteUser();
     expect(response.status).toBe(403);
   });
 
-  // 1 & 2
+  //  1 & 2
   it.each`
     language | message
-    ${'en'}  | ${en.unauthorized_user_update}
-    ${'de'}  | ${de.unauthorized_user_update}
+    ${'en'}  | ${en.unauthorized_user_delete}
+    ${'de'}  | ${de.unauthorized_user_delete}
   `(
     'returns error body with message:"$message" for unauthorized request and language is set to $language',
     async ({ language, message }) => {
       const now = new Date().getTime();
-      const response = await putUser({ language });
+      const response = await deleteUser({ id: 5, language });
       expect(response.body.message).toBe(message);
       expect(response.body.timestamp).toBeGreaterThan(now);
       expect(response.body.path).toBe('/api/1.0/users/5');
@@ -82,74 +78,64 @@ describe('User update', () => {
   );
 
   // 3
-  it('returns "403" forbidden when put request is sent with incorrect email', async () => {
-    await postUser();
-    const response = await putUser({ auth: { email: 'incorrect@mail.com', password: 'P4ssword' } });
+  it('returns "403" forbidden when delete request is sent with correct credentials but for different user', async () => {
+    // user 1...
+    await postUser(user1);
+    const token = loginUser(credentials);
+    // ...tries to delete user 2
+    const userToBeDeleted = await postUser(user2);
+    const response = await deleteUser({ id: userToBeDeleted.id, token });
     expect(response.status).toBe(403);
   });
 
   // 4
-  it('returns "403" forbidden when put request is sent with correct credentials but for different user', async () => {
-    await postUser();
-    const userToBeUpdated = await postUser({ email: 'user2@mail.com', password: 'P4ssword' });
-    const response = await putUser({
-      id: userToBeUpdated.id,
-      auth: { email: 'user1@mail.com', password: 'P4ssword' },
-    });
+  it('returns "403" forbidden when token is not valid', async () => {
+    const response = await deleteUser({ id: 5, token: '123' });
     expect(response.status).toBe(403);
   });
 
+  /** **************
+   * Success cases
+   *************** */
   // 5
-  // from the client this should not be possible anyways
-  it('returns "403" forbidden when put request is sent by inactive user with correct credentials', async () => {
-    const inactiveUser = await postUser({ inactive: true });
-    const response = await putUser({
-      id: inactiveUser.id,
-      auth: { email: 'user1@mail.com', password: 'P4ssword' },
-    });
-    expect(response.status).toBe(403);
-  });
-
-  // 6
-  it('returns "403" forbidden when put request is sent with incorrect password', async () => {
-    const user = await postUser();
-    const response = await putUser({
+  it('returns "200" ok when valid delete request is sent from authorized user', async () => {
+    const user = await postUser(user1);
+    const login = await loginUser(credentials);
+    const response = await deleteUser({
       id: user.id,
-      auth: { email: 'user1@mail.com', password: 'incorrect' },
-    });
-    expect(response.status).toBe(403);
-  });
-
-  // 7
-  it('returns "200" ok when valid put request is sent from authorized user', async () => {
-    const user = await postUser();
-    const response = await putUser({
-      id: user.id,
-      body: { username: 'a-new-name' },
-      auth: { email: user.email, password: 'P4ssword' },
+      token: login.token,
     });
     expect(response.status).toBe(200);
   });
 
-  // 8
-  it('updates username in database when valid update request is sent from authorized user', async () => {
-    const user = await postUser();
-    await putUser({
+  // 6
+  it('deletes user from database when delete request is sent from authorized user', async () => {
+    const user = await postUser(user1);
+    const login = await loginUser(credentials);
+    await deleteUser({
       id: user.id,
-      body: { username: 'a-new-name' },
-      auth: { email: user.email, password: 'P4ssword' },
+      token: login.token,
     });
     const dbUser = await User.findOne({ where: { id: user.id } });
-    expect(dbUser.username).toBe('a-new-name');
+    expect(dbUser).toBeNull();
   });
 
-  // 9
-  it('returns "403" forbidden when token is not valid', async () => {
-    const response = await putUser({
-      id: 5,
-      body: { username: 'a-new-name' },
-      auth: { token: 'invalid-token' },
-    });
-    expect(response.status).toBe(403);
+  it("also deletes the user's tokens from database when delete request is sent from authorized user", async () => {
+    const user = await postUser(user1);
+    const login = await loginUser(credentials);
+    await deleteUser({ id: user.id, token: login.token });
+    const dbToken = await Token.findOne({ where: { userId: user.id } });
+    expect(dbToken).toBeNull();
+  });
+
+  // user will have a token for each session he has logged in (different devices, browsers)
+  it("deletes all the user's tokens from database when delete request is sent from authorized user", async () => {
+    const user = await postUser(user1);
+    const login1 = await loginUser(credentials);
+    const login2 = await loginUser(credentials);
+    // "user destroys his/her account from session with token1"
+    await deleteUser({ id: user.id, token: login1.token });
+    const dbToken2 = await Token.findOne({ where: { token: login2.token } });
+    expect(dbToken2).toBeNull();
   });
 });

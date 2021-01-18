@@ -16,5 +16,6 @@
   "authentication_failure": "Falsche Anmeldeinformationen",
   "inactive_authentication_failure": "User ist nicht aktiviert",
   "unauthorized_user_update": "Sie haben keine Berechtigung um den User zu aktualisieren",
-  "unauthorized_user_loggout": "Ungültiges Token oder fehlendes Token zum Abmelden"
+  "unauthorized_user_logout": "Ungültiges Token oder fehlendes Token zum Abmelden",
+  "unauthorized_user_delete": "Sie sind nicht berechtigt, den User zu löschen"
 }

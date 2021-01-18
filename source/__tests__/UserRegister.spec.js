@@ -4,7 +4,7 @@ const { SMTPServer } = require('smtp-server'); // stands for Simple Mail Transfe
 
 const app = require('../src/app');
 const sequelize = require('../src/config/database');
-const User = require('../src/user/User');
+const { User } = require('../src/associations');
 // const EmailService = require('../src/email/EmailService'); // not needed with SMTP server
 
 // languages
@@ -43,7 +43,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   simulateSMTPFailure = false;
-  await User.destroy({ truncate: true });
+  await User.destroy({ truncate: { cascade: true } });
 });
 
 afterAll(async () => {

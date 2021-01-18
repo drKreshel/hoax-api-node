@@ -2,8 +2,8 @@ const request = require('supertest');
 const bcrypt = require('bcrypt');
 const app = require('../src/app');
 const sequelize = require('../src/config/database');
-const User = require('../src/user/User');
-const Token = require('../src/auth/Token');
+const { User } = require('../src/associations');
+const { Token } = require('../src/associations');
 // languages
 const en = require('../locales/en/translation.json');
 const de = require('../locales/de/translation.json');
@@ -13,7 +13,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await User.destroy({ truncate: true });
+  await User.destroy({ truncate: { cascade: true } });
 });
 
 const postUser = async ({
@@ -146,10 +146,9 @@ describe('User authentication', () => {
 });
 
 describe('Logout', () => {
-  it('returns "403" forbidden when unauthorized logout request is received', async () => {
-    // this means a user without valid token tries to logout,
+  it('returns "204" -ok no content- when logout request without auth header is received', async () => {
     const response = await postLogout();
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(204);
   });
 
   it('removes the session token from the database', async () => {
@@ -161,10 +160,59 @@ describe('Logout', () => {
     expect(dbToken).toBeNull();
   });
 
-  it('returns "403" unauthorized when invalid token is sent', async () => {
+  it('returns "403" forbidden when invalid token is sent', async () => {
     const user = await postUser();
     await postAuthentication();
     const response = await postLogout({ id: user.id, token: 'invalid-token' });
     expect(response.status).toBe(403);
+  });
+});
+
+describe('Token expiration', () => {
+  const putUser = async (id, body, token) => {
+    const agent = request(app).put(`/api/1.0/users/${id}`);
+    if (token) {
+      agent.set('Authorization', `Bearer ${token}`);
+    }
+    return agent.send(body);
+  };
+
+  it('returns "403" forbidden when token was not used for more than one week', async () => {
+    const user = await postUser();
+
+    const token = 'test-token';
+    const oneWeekAgo = new Date(Date.now() - (7 * 24 * 60 * 60 * 1000 + 1));
+    Token.create({ token, userId: user.id, lastUsedAt: oneWeekAgo });
+
+    const validUpdate = { username: 'user1-updated' };
+    const response = await putUser(user.id, validUpdate, token);
+    expect(response.status).toBe(403);
+  });
+
+  it('refreshes "lastUsedAt" field when unexpired token is used', async () => {
+    const user = await postUser();
+
+    const token = 'test-token';
+    const fourDaysAgo = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000);
+    await Token.create({ token, userId: user.id, lastUsedAt: fourDaysAgo });
+
+    const validUpdate = { username: 'user1-updated' };
+    const timeRightBeforeUpdate = new Date();
+    await putUser(user.id, validUpdate, token);
+    const dbToken = await Token.findOne({ where: { token } });
+    expect(dbToken.lastUsedAt.getTime()).toBeGreaterThan(timeRightBeforeUpdate.getTime());
+  });
+
+  it('refreshes "lastUsedAt" field when unexpired token is used for any endpoint request', async () => {
+    const user = await postUser();
+
+    const token = 'test-token';
+    const fourDaysAgo = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000);
+    await Token.create({ token, userId: user.id, lastUsedAt: fourDaysAgo });
+
+    const timeRightBeforeRequest = new Date();
+    await request(app).get('/api/1.0/users/5').set('Authorization', `Bearer ${token}`);
+    const dbToken = await Token.findOne({ where: { token } });
+    expect(dbToken.lastUsedAt.getTime()).toBeGreaterThan(timeRightBeforeRequest.getTime());
   });
 });
