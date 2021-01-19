@@ -2,9 +2,11 @@ const request = require('supertest');
 // const nodemailerStub = require('nodemailer-stub'); being replaced by SMTP server
 const { SMTPServer } = require('smtp-server'); // stands for Simple Mail Transfer Protocol
 
+const config = require('config');
 const app = require('../src/app');
 const sequelize = require('../src/config/database');
-const { User } = require('../src/associations');
+const User = require('../src/user/User');
+
 // const EmailService = require('../src/email/EmailService'); // not needed with SMTP server
 
 // languages
@@ -34,7 +36,7 @@ beforeAll(async () => {
     },
   });
 
-  server.listen(8587, 'localhost');
+  server.listen(config.mail.port, 'localhost');
   await sequelize.sync();
 
   // assures that SMTP server is up before tests
@@ -249,6 +251,7 @@ describe('User registration', () => {
 describe('Internalization', () => {
   it(`returns "${de.user_create_success}" when signup request is valid and language is set to german`, async () => {
     const response = await postUser({}, 'de');
+    console.log('Internalization', response.body);
     expect(response.body.message).toBe(de.user_create_success);
   });
 

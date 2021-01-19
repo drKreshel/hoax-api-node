@@ -6,7 +6,7 @@ module.exports = [
   check('username', 'username_size') // can also be passed here
     .notEmpty()
     .withMessage('username_null')
-    .bail() // if an error is found up to this point, it won't continue checking
+    .bail() // if an error is found up to this point, it won't continue checking username and go straight to check password
     .isLength({ min: 4, max: 32 }),
 
   check('password')

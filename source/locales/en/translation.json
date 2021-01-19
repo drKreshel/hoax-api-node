@@ -17,5 +17,8 @@
   "inactive_authentication_failure": "User is not activated",
   "unauthorized_user_update": "You are not authorized to update the user",
   "unauthorized_user_logout": "Invalid token or missing token to log out",
-  "unauthorized_user_delete": "You are not authorized to delete the user"
+  "unauthorized_user_delete": "You are not authorized to delete the user",
+  "email_not_found": "E-mail not found",
+  "password_reset_success": "An email to reset password has been sent to your email account",
+  "unauthorized_password_reset": "You are not authorized to reset password"
 }

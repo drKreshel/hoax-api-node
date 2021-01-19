@@ -5,9 +5,10 @@ const EmailService = require('../email/EmailService');
 const EmailException = require('../email/EmailException');
 const sequelize = require('../config/database');
 const InvalidTokenException = require('./InvalidTokenException');
-const UserNotFoundException = require('./UserNotFoundException');
-const { randomString } = require('../shared/generator');
+const NotFoundException = require('../error/NotFoundException');
 const TokenService = require('../auth/TokenService');
+
+const { randomString } = require('../shared/generator');
 
 const getUserByEmail = (email) => User.findOne({ where: { email } });
 
@@ -75,7 +76,7 @@ const getUser = async (id) => {
     where: { id, inactive: false },
     attributes: ['id', 'username', 'email'],
   });
-  if (!user) throw new UserNotFoundException();
+  if (!user) throw new NotFoundException('user_not_found');
   return user;
 };
 
@@ -94,4 +95,63 @@ const deleteUser = (id) => {
   //* ])
 };
 
-module.exports = { postUser, getUserByEmail, activateAccount, getUsers, getUser, updateUser, deleteUser };
+const passwordReset = async (email) => {
+  const user = await getUserByEmail(email);
+  if (!user) {
+    throw new NotFoundException('email_not_found');
+  }
+  user.passwordResetToken = randomString(16);
+  await user.save();
+  try {
+    await EmailService.sendPasswordReset(email, user.passwordResetToken);
+  } catch (error) {
+    throw new EmailException();
+  }
+};
+
+const updatePassword = async (request) => {
+  console.log(await User.findAll());
+  const hashedPassword = await bcrypt.hash(request.password, 10);
+  // Method 1 instance save (SELECT + UPDATE + SELECT (3 operations))
+  // const user = await User.findOne({ where: { passwordResetToken: request.passwordResetToken } });
+  // user.password = hashedPassword;
+  // user.passwordResetToken = null;
+  // user.inactive = false;
+  // user.activationToken = null;
+  // await user.save();
+
+  // Method 2 instance update (SELECT + UPDATE + SELECT (3 operations))
+  const user = await User.findOne({ where: { passwordResetToken: request.passwordResetToken } });
+  await user.update({
+    password: hashedPassword,
+    passwordResetToken: null,
+    inactive: false,
+    activationToken: null,
+  });
+
+  // Method 3 update Model (UPDATE AND SELECT, 2 operations)
+  // await User.update(
+  //   { password: hashedPassword, passwordResetToken: null, inactive: false, activationToken: null },
+  //   { where: { passwordResetToken: request.passwordResetToken } }
+  // );
+  await TokenService.deleteAllTokensFromUser(user.id);
+};
+
+const findUserByToken = (passwordResetToken) => {
+  return User.findOne({
+    where: { passwordResetToken },
+  });
+};
+
+module.exports = {
+  postUser,
+  getUserByEmail,
+  activateAccount,
+  getUsers,
+  getUser,
+  updateUser,
+  deleteUser,
+  passwordReset,
+  updatePassword,
+  findUserByToken,
+};

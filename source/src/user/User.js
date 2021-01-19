@@ -23,13 +23,15 @@ User.init(
     activationToken: {
       type: Sequelize.STRING,
     },
+    passwordResetToken: {
+      type: Sequelize.STRING,
+    },
   },
   {
     sequelize,
     modelName: 'user',
   }
 );
-
 
 // when user is removed, all tokens from them is removed
 // User.hasMany(Token, {

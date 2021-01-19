@@ -36,7 +36,7 @@ app.use(express.json());
 app.use(tokenAuthentication);
 
 // routes
-app.use('/api/1.0/users', UserRouter);
+app.use('/', UserRouter);
 app.use('/', AuthenticationRouter);
 
 app.use(errorHandler);
