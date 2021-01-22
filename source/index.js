@@ -20,7 +20,7 @@ const postUsers = async (n, m = 0) => {
   return User.bulkCreate(usersArr, { raw: true }); // raw: akind ".lean()"" from mongodb
 };
 
-sequelize.sync({ force: true }).then(async () => {
+sequelize.sync({ alter: true }).then(async () => {
   await postUsers(25);
 });
 

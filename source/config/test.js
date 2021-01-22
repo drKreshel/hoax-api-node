@@ -12,4 +12,8 @@ module.exports = {
     port: Math.floor(Math.random() * 2000) + 10000,
     tls: { rejectUnauthorized: false },
   },
+  directories: {
+    uploadDir: 'upload-test',
+    profileDir: 'profile',
+  },
 };

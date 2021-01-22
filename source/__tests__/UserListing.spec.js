@@ -90,12 +90,12 @@ describe('Listing Users', () => {
     expect(response.body.content.length).toBe(6);
   });
 
-  it('returns only "id", "username" and "email" fields in content array for each user', async () => {
+  it('returns only "id", "username", "email" and "image" fields in content array for each user', async () => {
     // we don't want to show any sensitive data
     await postUsers(1);
     const response = await getUsers();
     const user = response.body.content[0];
-    expect(Object.keys(user)).toEqual(['id', 'username', 'email']);
+    expect(Object.keys(user)).toEqual(['id', 'username', 'email', 'image']);
   });
 
   it('returns 2 total pages when there are 15 active and 7 inactive users', async () => {
@@ -185,11 +185,11 @@ describe('Get user', () => {
     expect(response.status).toBe(200);
   });
 
-  it("returns id, username and email, and doesn't returns password", async () => {
+  it("returns id, username, email, and image but doesn't returns password", async () => {
     const users = await postUsers(1);
     const user = users[0];
     const response = await getUser(user.id);
-    expect(Object.keys(response.body)).toEqual(['id', 'username', 'email']);
+    expect(Object.keys(response.body)).toEqual(['id', 'username', 'email', 'image']);
     expect(Object.keys(response.body)).not.toContain('password');
   });
 

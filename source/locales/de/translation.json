@@ -20,5 +20,7 @@
   "unauthorized_user_delete": "Sie sind nicht berechtigt, den User zu löschen",
   "email_not_found": "E-Mail wurde nicht gefunden",
   "password_reset_success": "Eine E-Mail zum Zurücksetzen des Passworts wurde an Ihr E-Mail gesendet",
-  "unauthorized_password_reset": "Sie sind nicht berechtigt, das Passport zurückzusetzen"
+  "unauthorized_password_reset": "Sie sind nicht berechtigt, das Passport zurückzusetzen",
+  "image_size_limit_exceeded": "Bildgrößenbeschränkung überschritten",
+  "unsupported_image_file": "Bilddateityp wird nicht unterstützt. Bitte laden Sie Bilder vom Typ PNG oder JPEG hoch"
 }

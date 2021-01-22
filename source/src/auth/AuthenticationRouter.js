@@ -20,7 +20,7 @@ router.post('/api/1.0/auth', loginValidation, async (req, res, next) => {
   if (user.inactive) return next(new ForbiddenException()); // 403
   const token = await TokenService.createToken({ id: user.id });
 
-  return res.status(200).send({ id: user.id, username: user.username, token });
+  return res.status(200).send({ id: user.id, username: user.username, image: user.image, token });
 });
 
 router.post('/api/1.0/logout/:id', tokenAuthentication, async (req, res, next) => {

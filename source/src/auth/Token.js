@@ -1,6 +1,5 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/database');
-
 // opaque token model
 const Model = Sequelize.Model;
 class Token extends Model {}

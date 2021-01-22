@@ -20,5 +20,7 @@
   "unauthorized_user_delete": "You are not authorized to delete the user",
   "email_not_found": "E-mail not found",
   "password_reset_success": "An email to reset password has been sent to your email account",
-  "unauthorized_password_reset": "You are not authorized to reset password"
+  "unauthorized_password_reset": "You are not authorized to reset password",
+  "image_size_limit_exceeded": "Image size limit exceeded",
+  "unsupported_image_file": "Image file type not supported. Please upload PNG or JPEG type images"
 }

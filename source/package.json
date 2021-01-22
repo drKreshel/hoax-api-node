@@ -6,6 +6,7 @@
   "scripts": {
     "start": "cross-env NODE_ENV=development nodemon index.js",
     "test": "cross-env NODE_ENV=test jest --watch",
+    "posttest": "cross-env NODE_ENV=test node test-cleanUp.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
@@ -16,6 +17,7 @@
     "config": "^3.3.3",
     "express": "^4.17.1",
     "express-validator": "^6.9.2",
+    "file-type": "^16.2.0",
     "i18next": "^19.8.4",
     "i18next-fs-backend": "^1.0.7",
     "i18next-http-middleware": "^3.0.6",
@@ -51,7 +53,7 @@
       "jest-watch-typeahead/filename",
       "jest-watch-typeahead/testname"
     ],
-    "testPathIgnorePatterns":[
+    "testPathIgnorePatterns": [
       "<rootDir>/node_modules",
       "<rootDir>/config"
     ]

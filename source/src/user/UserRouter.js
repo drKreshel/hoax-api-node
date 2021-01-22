@@ -5,6 +5,7 @@ const pagination = require('../middleware/pagination');
 const registrationValidation = require('../middleware/registrationValidation');
 const ForbiddenException = require('../error/ForbiddenException');
 const ValidationException = require('../error/ValidationException');
+const FileService = require('../file/FileService');
 
 // const tokenAuthentication = require('../middleware/tokenAuthentication');
 // TODO: maybe put back tokenAuthentication on each route that really needs it, instead of putting as global middleware.
@@ -52,17 +53,52 @@ router.get('/api/1.0/users/:id', async (req, res, next) => {
   }
 });
 // if the function is async you need to pass the error via "next(new UserNotFoundException())". Otherwise you can just call "throw new UserNotFoundException()"
-router.put('/api/1.0/users/:id', async (req, res, next) => {
-  // si la autenticación falló o si se está intentado modificar otro usuario ==> 403 forbidden
-  if (!req.authenticatedUser || req.authenticatedUser.id != req.params.id) {
-    return next(new ForbiddenException('unauthorized_user_update'));
-  }
-  await UserService.updateUser(req.params.id, req.body);
-  /** Variant: another way to do the update, but is better to have it on a different service.
+
+router.put(
+  '/api/1.0/users/:id',
+  check('username', 'username_size') // can also be passed here
+    .notEmpty()
+    .withMessage('username_null')
+    .bail() // if an error is found up to this point, it won't continue checking username and go straight to check password
+    .isLength({ min: 4, max: 32 }),
+  check('image').custom(async (imageAsBase64String) => {
+    // exit -image size validation- if no image is sent in the request
+    if (!imageAsBase64String) return true;
+
+    // return error if image is is higher than 2MB
+    const buffer = Buffer.from(imageAsBase64String, 'base64');
+    if (FileService.isBiggerThan2MB(buffer)) {
+      throw new Error('image_size_limit_exceeded');
+    }
+
+    // return error if file type is unsupported
+    if (!(await FileService.isSupportedFileType(buffer))) {
+      throw new Error('unsupported_image_file');
+    }
+
+    return true;
+  }),
+  async (req, res, next) => {
+    // authentication controls
+    if (!req.authenticatedUser || req.authenticatedUser.id != req.params.id) {
+      return next(new ForbiddenException('unauthorized_user_update'));
+    }
+
+    // validation controls
+    const errors = validationResult(req).errors;
+
+    if (errors.length) {
+      // return res.status(400).send();
+      return next(new ValidationException(errors));
+    }
+
+    const updatedUser = await UserService.updateUser(req.params.id, req.body);
+    /** Variant: another way to do the update, but is better to have it on a different service.
     Object.assign(user, req.body);
     await user.save(); */
-  return res.status(200).send('User data modified successfully'); // todo: internalization
-});
+    return res.status(200).send(updatedUser); // todo: internalization
+  }
+);
 
 router.delete('/api/1.0/users/:id', async (req, res, next) => {
   if (!req.authenticatedUser || req.authenticatedUser.id != req.params.id) {
@@ -96,7 +132,7 @@ router.put(
 
   // looks for user with that passwordResetToken in the database to check if it exists
   async (req, res, next) => {
-    const user = await UserService.findUserByToken(req.body.passwordResetToken)
+    const user = await UserService.findUserByToken(req.body.passwordResetToken);
     if (!user) {
       return next(new ForbiddenException('unauthorized_password_reset'));
     }

@@ -7,6 +7,7 @@ const sequelize = require('../config/database');
 const InvalidTokenException = require('./InvalidTokenException');
 const NotFoundException = require('../error/NotFoundException');
 const TokenService = require('../auth/TokenService');
+const FileService = require('../file/FileService');
 
 const { randomString } = require('../shared/generator');
 
@@ -64,7 +65,7 @@ const getUsers = async ({ page, size, authenticatedUser }) => {
     where: whereQuery,
     offset: size * page,
     limit: size,
-    attributes: ['id', 'username', 'email'],
+    attributes: ['id', 'username', 'email', 'image'],
   });
   const content = users.rows;
   const totalPages = Math.ceil(users.count / size);
@@ -74,14 +75,30 @@ const getUsers = async ({ page, size, authenticatedUser }) => {
 const getUser = async (id) => {
   const user = await User.findOne({
     where: { id, inactive: false },
-    attributes: ['id', 'username', 'email'],
+    attributes: ['id', 'username', 'email', 'image'],
   });
   if (!user) throw new NotFoundException('user_not_found');
   return user;
 };
 
-const updateUser = (id, body) => {
-  return User.update(body, { where: { id } }); // {returning: true} only works with postgres (psql)
+const updateUser = async (id, body) => {
+  const user = await User.findOne({ where: { id } });
+  let updatedBody = body;
+  // if user request sends a new image...
+  if (body.image) {
+    // if user already has an image, it deletes it
+    if (user.image) {
+      await FileService.deleteProfileImage(user.image);
+    }
+    // creates an image file in upload folder from base 64 string and return a simple filename for easy storage in db
+    const filename = await FileService.saveProfileImage(body.image);
+    updatedBody = { ...body, image: filename };
+  }
+  await user.update(updatedBody);
+  await user.save();
+  return { id: user.id, username: user.username, email: user.email, ...updatedBody };
+  // esto solo se podría hacer en postgreSQL
+  // return User.update(body, { where: { id } }); // {returning: true} only works with postgres (psql)
 };
 
 const deleteUser = (id) => {
@@ -110,7 +127,6 @@ const passwordReset = async (email) => {
 };
 
 const updatePassword = async (request) => {
-  console.log(await User.findAll());
   const hashedPassword = await bcrypt.hash(request.password, 10);
   // Method 1 instance save (SELECT + UPDATE + SELECT (3 operations))
   // const user = await User.findOne({ where: { passwordResetToken: request.passwordResetToken } });
