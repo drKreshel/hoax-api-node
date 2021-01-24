@@ -8,11 +8,10 @@ module.exports = {
     logging: false,
   },
   mail: {
-    host: 'smtp.ethereal.email',
-    port: 587,
+    service: 'gmail',
     auth: {
-      user: 'aurore66@ethereal.email',
-      pass: 'HnnrCT8sg6kFwGb5ZM',
+      user: 'juanloza877@gmail.com',
+      pass: '^Uv2C8K1eJ^4',
     },
   },
   directories: {
