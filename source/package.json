@@ -8,10 +8,10 @@
     "start": "cross-env NODE_ENV=production npm run migrate && cross-env NODE_ENV=production node index.js",
     "test": "cross-env NODE_ENV=test jest tests --watch && cross-env NODE_ENV=test npm run clean-up",
     "test:staging": "cross-env NODE_ENV=staging npm run migrate && cross-env NODE_ENV=staging jest --runInBand --detectOpenHandles --forceExit && cross-env NODE_ENV=staging npm run clean-up",
-    "clean-up":"node test-cleanUp.js",
+    "clean-up": "node test-cleanUp.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "migrate:staging": "cross-env NODE_ENV=staging sequelize-cli db:migrate"
+    "migrate": "sequelize-cli db:migrate"
   },
   "author": "drKreshel",
   "license": "ISC",
@@ -29,7 +29,8 @@
     "pg-hstore": "^2.3.3",
     "sequelize": "^6.3.5",
     "sequelize-cli": "^6.2.0",
-    "sqlite3": "^5.0.0"
+    "sqlite3": "^5.0.0",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",
