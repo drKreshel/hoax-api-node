@@ -40,7 +40,7 @@ const app = express();
 app.use(middleware.handle(i18next));
 app.use(express.json({ limit: '3mb' }));
 
-// max age sets cache so image doesn't need to be requested again if no changes happened
+// maxAge sets cache so image doesn't need to be requested again if no changes happened
 app.use('/images', express.static(profileImageFolder, { maxAge: ONE_YEAR_IN_MILLISECONDS }));
 
 // instead of putting tokenAuthentication middleware on each route. Only verifies and updates token if authorization header is sent

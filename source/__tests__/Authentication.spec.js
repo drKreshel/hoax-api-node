@@ -9,7 +9,9 @@ const en = require('../locales/en/translation.json');
 const de = require('../locales/de/translation.json');
 
 beforeAll(async () => {
-  await sequelize.sync();
+  if (process.env.NODE_ENV === 'test') {
+    await sequelize.sync();
+  }
 });
 
 beforeEach(async () => {
@@ -44,6 +46,7 @@ const postLogout = (options = {}) => {
 describe('User authentication', () => {
   it('returns status "200" ok when credentials are correct', async () => {
     await postUser();
+    console.log('USER', await User.findAll());
     const response = await postAuthentication({ email: 'user1@mail.com', password: 'P4ssword' });
     expect(response.status).toBe(200);
   });

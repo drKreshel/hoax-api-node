@@ -5,7 +5,7 @@ const { SMTPServer } = require('smtp-server'); // stands for Simple Mail Transfe
 const config = require('config');
 const app = require('../src/app');
 const sequelize = require('../src/config/database');
-const User = require('../src/user/User');
+const { User } = require('../src/associations');
 
 // const EmailService = require('../src/email/EmailService'); // not needed with SMTP server
 
@@ -37,7 +37,10 @@ beforeAll(async () => {
   });
 
   server.listen(config.mail.port, 'localhost');
-  await sequelize.sync();
+
+  if (process.env.NODE_ENV === 'test') {
+    await sequelize.sync();
+  }
 
   // assures that SMTP server is up before tests
   jest.setTimeout(20000);

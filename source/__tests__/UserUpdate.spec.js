@@ -13,7 +13,9 @@ const de = require('../locales/de/translation.json');
 const profileImageDir = path.join('.', uploadDir, profileDir);
 
 beforeAll(async () => {
-  await sequelize.sync();
+  if (process.env.NODE_ENV === 'test') {
+    await sequelize.sync();
+  }
 });
 
 beforeEach(async () => {

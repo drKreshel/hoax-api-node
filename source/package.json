@@ -4,11 +4,14 @@
   "description": "tdd with express",
   "main": "app.js",
   "scripts": {
-    "start": "cross-env NODE_ENV=development nodemon index.js",
-    "test": "cross-env NODE_ENV=test jest --watch",
-    "posttest": "cross-env NODE_ENV=test node test-cleanUp.js",
+    "start:dev": "cross-env NODE_ENV=development npm run migrate && cross-env NODE_ENV=development nodemon index.js",
+    "start": "cross-env NODE_ENV=production npm run migrate && cross-env NODE_ENV=production node index.js",
+    "test": "cross-env NODE_ENV=test jest tests --watch && cross-env NODE_ENV=test npm run clean-up",
+    "test:staging": "cross-env NODE_ENV=staging npm run migrate && cross-env NODE_ENV=staging jest --runInBand --detectOpenHandles --forceExit && cross-env NODE_ENV=staging npm run clean-up",
+    "clean-up":"node test-cleanUp.js",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "migrate:staging": "cross-env NODE_ENV=staging sequelize-cli db:migrate"
   },
   "author": "drKreshel",
   "license": "ISC",
@@ -22,7 +25,10 @@
     "i18next-fs-backend": "^1.0.7",
     "i18next-http-middleware": "^3.0.6",
     "nodemailer": "^6.4.17",
+    "pg": "^8.5.1",
+    "pg-hstore": "^2.3.3",
     "sequelize": "^6.3.5",
+    "sequelize-cli": "^6.2.0",
     "sqlite3": "^5.0.0"
   },
   "devDependencies": {

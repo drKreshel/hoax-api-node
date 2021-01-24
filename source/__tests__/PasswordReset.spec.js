@@ -34,7 +34,10 @@ beforeAll(async () => {
   });
 
   server.listen(config.mail.port, 'localhost');
-  await sequelize.sync();
+
+  if (process.env.NODE_ENV === 'test') {
+    await sequelize.sync();
+  }
 
   // assures that SMTP server is up before tests
   jest.setTimeout(20000);
