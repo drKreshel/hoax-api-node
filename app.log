@@ -53,3 +53,15 @@
 23-01-2021 - 23:45:02 oo [ERROR  ] : error
 23-01-2021 - 23:45:06 oo [ERROR  ] : error
 23-01-2021 - 23:45:09 oo [ERROR  ] : error
+25-01-2021 - 02:10:05  [ERROR  ] : error
+25-01-2021 - 02:10:05  [WARN   ] : warn
+25-01-2021 - 02:10:05  [INFO   ] : info
+25-01-2021 - 02:10:05  [VERBOSE] : verbose
+25-01-2021 - 02:10:05  [DEBUG  ] : debug
+25-01-2021 - 02:10:05  [INFO   ] : SERVER RUNNING AT PORT 3000. Version: 1.0.0
+25-01-2021 - 02:26:32  [ERROR  ] : error
+25-01-2021 - 02:26:32  [WARN   ] : warn
+25-01-2021 - 02:26:32  [INFO   ] : info
+25-01-2021 - 02:26:32  [VERBOSE] : verbose
+25-01-2021 - 02:26:32  [DEBUG  ] : debug
+25-01-2021 - 02:26:32  [INFO   ] : SERVER RUNNING AT PORT 3000. Version: 1.0.0

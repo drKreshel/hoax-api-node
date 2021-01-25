@@ -1,7 +1,6 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../config/database');
 
-console.log('HOLA');
 const Model = Sequelize.Model;
 
 class User extends Model {}
