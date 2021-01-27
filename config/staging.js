@@ -5,7 +5,7 @@ module.exports = {
     password: 'superfluosCat',
     dialect: 'sqlite',
     storage: './staging.sqlite',
-    logging: true,
+    logging: false,
   },
   mail: {
     host: 'localhost',
