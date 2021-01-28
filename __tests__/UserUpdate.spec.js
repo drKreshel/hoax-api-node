@@ -79,13 +79,11 @@ const putUser = async ({ id = 5, body = {}, auth = {}, language } = {}) => {
 };
 
 describe('User update', () => {
-  // 0
   it('returns "403" forbidden when request is sent without basic authorization', async () => {
     const response = await putUser();
     expect(response.status).toBe(403);
   });
 
-  // 1 & 2
   it.each`
     language | message
     ${'en'}  | ${en.unauthorized_user_update}
@@ -101,14 +99,12 @@ describe('User update', () => {
     }
   );
 
-  // 3
   it('returns "403" forbidden when put request is sent with incorrect email', async () => {
     await postUser();
     const response = await putUser({ auth: { email: 'incorrect@mail.com', password: 'P4ssword' } });
     expect(response.status).toBe(403);
   });
 
-  // 4
   it('returns "403" forbidden when put request is sent with correct credentials but for different user', async () => {
     await postUser();
     const userToBeUpdated = await postUser({ email: 'user2@mail.com', password: 'P4ssword' });
@@ -119,7 +115,6 @@ describe('User update', () => {
     expect(response.status).toBe(403);
   });
 
-  // 5
   // from the client this should not be possible anyways
   it('returns "403" forbidden when put request is sent by inactive user with correct credentials', async () => {
     const inactiveUser = await postUser({ inactive: true });
@@ -319,14 +314,12 @@ describe('User update', () => {
     const firstImagePath = path.join(profileImageDir, firstImage);
 
     // second image (backEnd interprets the image as new, even if its the same file (will generate a new random name for it))
-    // not passing image in the body
     await putUser({
       id: user.id,
-      body: { username: 'a-new-name-updatedAgain' },
+      body: { username: 'a-new-name-updatedAgain' }, // not passing image in the body
       auth: { email: user.email, password: 'P4ssword' },
     });
 
-    // we expect first image to still be there
     expect(fs.existsSync(firstImagePath)).toBe(true);
 
     const dbUser = await User.findOne({ where: { id: user.id } });

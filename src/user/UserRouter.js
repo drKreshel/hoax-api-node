@@ -7,10 +7,6 @@ const ForbiddenException = require('../error/ForbiddenException');
 const ValidationException = require('../error/ValidationException');
 const FileService = require('../file/FileService');
 
-// const tokenAuthentication = require('../middleware/tokenAuthentication');
-// TODO: maybe put back tokenAuthentication on each route that really needs it, instead of putting as global middleware.
-// Ale: es más importante podes en cualquier momento cambiar solo en un lugar el middleware y que el resto de la aplicacion siga funcionando sin enterarse
-
 const router = express.Router();
 
 /// POST api/1.0/users
@@ -23,7 +19,6 @@ router.post('/api/1.0/users', registrationValidation, async (req, res, next) => 
     return next(err);
   }
 });
-// From express documentation: If you pass anything to the next() function (except the string 'route'), Express regards the current request as being an error and will skip any remaining non-error handling routing and middleware functions.
 
 // POST api/1.0/users/token/:token
 router.post('/api/1.0/users/token/:token', async (req, res, next) => {
@@ -32,7 +27,7 @@ router.post('/api/1.0/users/token/:token', async (req, res, next) => {
     await UserService.activateAccount(token);
     return res.status(200).send({ message: req.t('account_activation_success') });
   } catch (err) {
-    return next(err); // sin el return continua la ejecución
+    return next(err);
   }
 });
 
@@ -52,11 +47,10 @@ router.get('/api/1.0/users/:id', async (req, res, next) => {
     return next(err);
   }
 });
-// if the function is async you need to pass the error via "next(new UserNotFoundException())". Otherwise you can just call "throw new UserNotFoundException()"
 
 router.put(
   '/api/1.0/users/:id',
-  check('username', 'username_size') // can also be passed here
+  check('username', 'username_size')
     .notEmpty()
     .withMessage('username_null')
     .bail() // if an error is found up to this point, it won't continue checking username and go straight to check password
@@ -65,7 +59,7 @@ router.put(
     // exit -image size validation- if no image is sent in the request
     if (!imageAsBase64String) return true;
 
-    // return error if image is is higher than 2MB
+    // return error if image is higher than 2MB
     const buffer = Buffer.from(imageAsBase64String, 'base64');
     if (FileService.isBiggerThan2MB(buffer)) {
       throw new Error('image_size_limit_exceeded');
@@ -88,15 +82,11 @@ router.put(
     const errors = validationResult(req).errors;
 
     if (errors.length) {
-      // return res.status(400).send();
       return next(new ValidationException(errors));
     }
 
     const updatedUser = await UserService.updateUser(req.params.id, req.body);
-    /** Variant: another way to do the update, but is better to have it on a different service.
-    Object.assign(user, req.body);
-    await user.save(); */
-    return res.status(200).send(updatedUser); // todo: internalization
+    return res.status(200).send(updatedUser);
   }
 );
 
@@ -108,7 +98,7 @@ router.delete('/api/1.0/users/:id', async (req, res, next) => {
   return res.status(200).send();
 });
 
-//! user en singular
+//! user singular
 router.post(
   '/api/1.0/user/password',
   check('email').isEmail().withMessage('email_invalid'),
@@ -126,7 +116,6 @@ router.post(
   }
 );
 
-//! ESTA EN SINGULAR ESTE USER, por eso no golpea en el anterior put
 router.put(
   '/api/1.0/user/password',
 

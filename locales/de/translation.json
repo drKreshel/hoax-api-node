@@ -22,5 +22,9 @@
   "password_reset_success": "Eine E-Mail zum Zurücksetzen des Passworts wurde an Ihr E-Mail gesendet",
   "unauthorized_password_reset": "Sie sind nicht berechtigt, das Passport zurückzusetzen",
   "image_size_limit_exceeded": "Bildgrößenbeschränkung überschritten",
-  "unsupported_image_file": "Bilddateityp wird nicht unterstützt. Bitte laden Sie Bilder vom Typ PNG oder JPEG hoch"
+  "unsupported_image_file": "Bilddateityp wird nicht unterstützt. Bitte laden Sie Bilder vom Typ PNG oder JPEG hoch",
+  "unauthorized_hoax_submit": "Sie sind nicht berechtigt, einen Hoax einzureichen",
+  "hoax_submit_success": "Hoax wurde erfolgreich gespeichert",
+  "hoax_content_size": "Hoax muss mindestens 10 und höchstens 5000 Zeichen haben"
+  
 }

@@ -38,18 +38,6 @@ const saveProfileImagePromiseVersion = (base64file) => {
     });
   });
 };
-// version using async instead of promises
-// eslint-disable-next-line no-unused-vars
-const saveProfileImageAsyncVersion = async (base64file) => {
-  const filename = randomString(32);
-  const filepath = path.join(profileFolder, filename);
-  let returnValue;
-  await fs.writeFile(filepath, base64file, 'base64', (err) => {
-    if (!err) returnValue = filename;
-    else returnValue = err;
-  });
-  return returnValue;
-};
 
 const deleteProfileImage = async (filename) => {
   const filepath = path.join(profileFolder, filename);

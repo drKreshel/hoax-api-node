@@ -7,13 +7,6 @@ sequelize.sync();
 
 TokenService.scheduledCleanup();
 
-logger.error('error');
-logger.warn('warn');
-logger.info('info');
-logger.verbose('verbose');
-logger.debug('debug');
-logger.silly('silly');
-
 app.listen(process.env.PORT || 3000, () =>
   logger.info(`SERVER RUNNING AT PORT 3000. Version: ${process.env.npm_package_version}`)
 );

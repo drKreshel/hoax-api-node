@@ -1,10 +1,10 @@
 module.exports = {
   database: {
     database: 'hoaxify',
-    username: 'drKreshel',
-    password: 'superfluosCat',
-    dialect: 'sqlite',
-    storage: './staging.sqlite',
+    username: 'postgres',
+    password: '1',
+    dialect: 'postgres',
+    host: 'localhost',
     logging: false,
   },
   mail: {
@@ -17,3 +17,14 @@ module.exports = {
     profileDir: 'profile',
   },
 };
+
+/* SQLite database
+  database: {
+    database: 'hoaxify',
+    username: 'drKreshel',
+    password: 'superfluosCat',
+    dialect: 'sqlite',
+    storage: './staging.sqlite',
+    logging: false,
+  },
+*/

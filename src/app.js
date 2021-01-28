@@ -6,13 +6,18 @@ const { uploadDir, profileDir } = require('config').directories;
 const i18next = require('i18next');
 const Backend = require('i18next-fs-backend');
 const middleware = require('i18next-http-middleware');
-// Routers
+
+// endpoints
 const UserRouter = require('./user/UserRouter');
 const AuthenticationRouter = require('./auth/AuthenticationRouter');
+const HoaxRouter = require('./hoax/HoaxRouter');
 const errorHandler = require('./error/errorHandler');
+
 // middleware
 const tokenAuthentication = require('./middleware/tokenAuthentication');
-// services
+
+// other
+const logger = require('./shared/logger');
 const FileService = require('./file/FileService');
 
 const profileImageFolder = path.join('.', uploadDir, profileDir);
@@ -49,8 +54,9 @@ app.use(tokenAuthentication);
 // routes
 app.use('/', UserRouter);
 app.use('/', AuthenticationRouter);
+app.use('/', HoaxRouter);
 
 app.use(errorHandler);
 
-console.log('NODE_ENV: ', process.env.NODE_ENV);
+logger.info('NODE_ENV: ', process.env.NODE_ENV);
 module.exports = app;

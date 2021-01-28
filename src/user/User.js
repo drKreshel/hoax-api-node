@@ -35,12 +35,4 @@ User.init(
   }
 );
 
-// when user is removed, all tokens from them is removed
-// User.hasMany(Token, {
-//   foreignKey: 'userId',
-//   onDelete: 'cascade',
-//   hooks: true,
-//   targetKey: 'id',
-// });
-
 module.exports = User;

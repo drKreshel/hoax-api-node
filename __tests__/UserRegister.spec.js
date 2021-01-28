@@ -254,7 +254,6 @@ describe('User registration', () => {
 describe('Internalization', () => {
   it(`returns "${de.user_create_success}" when signup request is valid and language is set to german`, async () => {
     const response = await postUser({}, 'de');
-    console.log('Internalization', response.body);
     expect(response.body.message).toBe(de.user_create_success);
   });
 

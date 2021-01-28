@@ -11,17 +11,18 @@ Token.init(
     lastUsedAt: {
       type: Sequelize.DATE,
     },
-    userId: {
-      type: Sequelize.INTEGER,
-      references: {
-        model: 'users',
-        key: 'id',
-      },
-      onDelete: 'cascade',
-    },
+    // userId: {
+    //   type: Sequelize.INTEGER,
+    //   references: {
+    //     model: 'users',
+    //     key: 'id',
+    //   },
+    //   onDelete: 'cascade',
+    // },
   },
   {
     sequelize,
+    tablename: 'tokens',
     modelName: 'token',
     timestamps: false,
   }

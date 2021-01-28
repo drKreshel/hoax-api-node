@@ -59,8 +59,7 @@ const getUsers = async ({ page, size, authenticatedUser }) => {
   if (authenticatedUser) {
     whereQuery.id = { [Op.not]: authenticatedUser.id };
   }
-  /** another nice way of doing the above would be setting id=0 in case authenticatedUser does not exist
-   * but this does increase query time */
+  /** another nice way of doing the above (increases query time) would be setting id=0 in case authenticatedUser does not exist */
   const users = await User.findAndCountAll({
     where: whereQuery,
     offset: size * page,
@@ -104,7 +103,7 @@ const updateUser = async (id, body) => {
 const deleteUser = (id) => {
   return User.destroy({ where: { id } });
   /** This code is for destroying Tokens manually. (On Delete cascade in model
-   *  wasn't working properly before)
+   *  is not working properly all the times thx sequelize!)
    */
   //* return Promise.all([
   //*   User.destroy({ where: { id } }),

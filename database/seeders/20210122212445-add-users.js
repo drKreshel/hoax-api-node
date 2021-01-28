@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 
 module.exports = {
+  // eslint-disable-next-line no-unused-vars
   up: async (queryInterface, Sequelize) => {
     const hashedPassword = await bcrypt.hash('P4ssword', 10);
     const users = [];
@@ -17,6 +18,7 @@ module.exports = {
     await queryInterface.bulkInsert('users', users, { raw: true });
   },
 
+  // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
     /**
      * Add commands to revert seed here.
