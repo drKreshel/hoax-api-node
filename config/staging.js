@@ -4,7 +4,7 @@ module.exports = {
     username: 'postgres',
     password: '1',
     dialect: 'postgres',
-    host: 'localhost',
+    host: 'http://34.70.172.205/',
     logging: false,
   },
   mail: {
