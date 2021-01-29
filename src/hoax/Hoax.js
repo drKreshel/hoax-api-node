@@ -10,7 +10,7 @@ Hoax.init(
     },
     timestamp: {
       type: Sequelize.BIGINT,
-    }
+    },
   },
   {
     sequelize,

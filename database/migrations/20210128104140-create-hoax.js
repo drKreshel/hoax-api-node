@@ -13,14 +13,6 @@ module.exports = {
       timestamp: {
         type: Sequelize.BIGINT,
       },
-      // userId: {
-      //   type: Sequelize.INTEGER,
-      //   references: {
-      //     model: 'users',
-      //     key: 'id',
-      //   },
-      //   onDelete: 'cascade',
-      // },
     });
   },
 

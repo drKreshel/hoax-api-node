@@ -8,11 +8,13 @@ const { Token } = require('../associations');
 const ONE_WEEK_IN_MILLIS = 7 * 24 * 60 * 60 * 1000;
 const createToken = async (user) => {
   const token = randomString(32);
-  await Token.create({
-    token,
-    userId: user.id,
-    lastUsedAt: Date.now(),
-  });
+  if (user.id) {
+    await Token.create({
+      token,
+      userId: user.id,
+      lastUsedAt: Date.now(),
+    });
+  }
   return token;
 };
 

@@ -2,7 +2,7 @@ module.exports = {
   database: {
     database: 'hoaxify',
     username: 'postgres',
-    password: 'postgres',
+    password: '1',
     dialect: 'postgres',
     host: 'localhost',
     logging: false,

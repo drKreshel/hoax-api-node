@@ -12,6 +12,6 @@ module.exports = {
 
   // eslint-disable-next-line no-unused-vars
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.deleteColumn('hoaxes', 'userId');
+    await queryInterface.removeColumn('hoaxes', 'userId');
   },
 };
