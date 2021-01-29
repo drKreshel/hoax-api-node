@@ -91,7 +91,6 @@ router.put(
 );
 
 router.delete('/api/1.0/users/:id', async (req, res, next) => {
-  console.log('DELETE ROUTE');
   if (!req.authenticatedUser || req.authenticatedUser.id != req.params.id) {
     return next(new ForbiddenException('unauthorized_user_delete'));
   }
