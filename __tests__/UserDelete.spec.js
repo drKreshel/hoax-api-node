@@ -1,17 +1,16 @@
 const request = require('supertest');
+const fs = require('fs');
+const path = require('path');
+const { uploadDir, profileDir, attachmentsDir } = require('config').directories;
 const bcrypt = require('bcrypt');
 const app = require('../src/app');
-const sequelize = require('../src/config/database');
-const { User, Token } = require('../src/associations');
+const { User, Token, Hoax, FileAttachment } = require('../src/associations');
 // languages
 const en = require('../locales/en/translation.json');
 const de = require('../locales/de/translation.json');
 
-beforeAll(async () => {
-  if (process.env.NODE_ENV === 'test') {
-    await sequelize.sync();
-  }
-});
+const profileFolder = path.join('.', uploadDir, profileDir);
+const attachmentsFolder = path.join('.', uploadDir, attachmentsDir);
 
 beforeEach(async () => {
   await User.destroy({ truncate: { cascade: true } });
@@ -138,5 +137,56 @@ describe('User delete', () => {
     await deleteUser({ id: user.id, token: login1.token });
     const dbToken2 = await Token.findOne({ where: { token: login2.token } });
     expect(dbToken2).toBeNull();
+  });
+
+  it('deletes hoax from database when delete user request is sent from authorized user', async () => {
+    const user = await postUser(user1);
+    const { token } = await loginUser(credentials);
+    await request(app)
+      .post('/api/1.0/hoaxes')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ content: 'Hoax content' });
+    // "user destroys his/her account from session with token1"
+    await deleteUser({ id: user.id, token });
+    const hoaxes = await Hoax.findAll();
+    expect(hoaxes.length).toBe(0);
+  });
+
+  it('removes profile iamge when user is deleted', async () => {
+    const user = await postUser(user1);
+    const { token } = await loginUser(credentials);
+    const storedFilename = 'profile-image-user1';
+    const testFilepath = path.join('.', '__tests__', 'resources', 'test-png.png');
+    const targetPath = path.join(profileFolder, storedFilename);
+    fs.copyFileSync(testFilepath, targetPath);
+    user.image = storedFilename;
+    await user.save();
+    await deleteUser({ id: user.id, token });
+    expect(fs.existsSync(targetPath)).toBe(false);
+  });
+
+  it('deletes hoax attachment from storage(upload folder) and database when delete user request is sent from authorized user', async () => {
+    const user = await postUser(user1);
+    const { token } = await loginUser(credentials);
+
+    const storedFilename = 'profile-image-user';
+    const testFilepath = path.join('.', '__tests__', 'resources', 'test-png.png');
+    const targetPath = path.join(attachmentsFolder, storedFilename);
+    fs.copyFileSync(testFilepath, targetPath);
+
+    const storedAttachment = await FileAttachment.create({
+      filename: storedFilename,
+    });
+
+    await request(app)
+      .post('/api/1.0/hoaxes')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ content: 'Hoax content', fileAttachmentId: storedAttachment.id });
+    await deleteUser({ id: user.id, token });
+    const storedAttachmentAfterUserDelete = await FileAttachment.findOne({
+      where: { id: storedAttachment.id },
+    });
+    expect(fs.existsSync(targetPath)).toBe(false);
+    expect(storedAttachmentAfterUserDelete).toBeNull();
   });
 });

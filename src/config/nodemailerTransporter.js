@@ -6,7 +6,7 @@ const mailConfig = config.get('mail');
 // const nodemailerStub = require('nodemailer-stub'); replaced with STMPServer
 
 const transporter = nodemailer.createTransport({ ...mailConfig });
-// ? porque no directamente mailConfig en lugar de { ...mailConfig }? Lo probe y anda
+
 // transporter debugger. Uncomment to check for errors
 /**
 transporter.verify(function (error, success) {

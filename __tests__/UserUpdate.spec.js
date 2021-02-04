@@ -4,19 +4,12 @@ const fs = require('fs');
 const path = require('path');
 const { uploadDir, profileDir } = require('config').directories;
 const app = require('../src/app');
-const sequelize = require('../src/config/database');
 const { User } = require('../src/associations');
 // languages
 const en = require('../locales/en/translation.json');
 const de = require('../locales/de/translation.json');
 
 const profileImageDir = path.join('.', uploadDir, profileDir);
-
-beforeAll(async () => {
-  if (process.env.NODE_ENV === 'test') {
-    await sequelize.sync();
-  }
-});
 
 beforeEach(async () => {
   await User.destroy({ truncate: { cascade: true } });

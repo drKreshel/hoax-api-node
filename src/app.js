@@ -1,6 +1,6 @@
 const path = require('path');
 const express = require('express');
-const { uploadDir, profileDir } = require('config').directories;
+const { uploadDir, profileDir, attachmentsDir } = require('config').directories;
 
 // Internalization
 const i18next = require('i18next');
@@ -12,6 +12,7 @@ const UserRouter = require('./user/UserRouter');
 const AuthenticationRouter = require('./auth/AuthenticationRouter');
 const HoaxRouter = require('./hoax/HoaxRouter');
 const errorHandler = require('./error/errorHandler');
+const FileRouter = require('./file/FileRouter');
 
 // middleware
 const tokenAuthentication = require('./middleware/tokenAuthentication');
@@ -21,6 +22,7 @@ const logger = require('./shared/logger');
 const FileService = require('./file/FileService');
 
 const profileImageFolder = path.join('.', uploadDir, profileDir);
+const attachmentsPath = path.join('.', uploadDir, attachmentsDir);
 const ONE_YEAR_IN_MILLISECONDS = 365 * 24 * 60 * 60 * 1000;
 
 i18next
@@ -47,6 +49,7 @@ app.use(express.json({ limit: '3mb' }));
 
 // maxAge sets cache so image doesn't need to be requested again if no changes happened
 app.use('/images', express.static(profileImageFolder, { maxAge: ONE_YEAR_IN_MILLISECONDS }));
+app.use('/attachments', express.static(attachmentsPath, { maxAge: ONE_YEAR_IN_MILLISECONDS }));
 
 // instead of putting tokenAuthentication middleware on each route. Only verifies and updates token if authorization header is sent
 app.use(tokenAuthentication);
@@ -55,6 +58,7 @@ app.use(tokenAuthentication);
 app.use('/', UserRouter);
 app.use('/', AuthenticationRouter);
 app.use('/', HoaxRouter);
+app.use('/', FileRouter);
 
 app.use(errorHandler);
 

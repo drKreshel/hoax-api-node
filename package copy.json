@@ -17,26 +17,27 @@
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.0.0",
+    "comment-json": "^4.1.0",
     "config": "^3.3.3",
     "express": "^4.17.1",
     "express-validator": "^6.9.2",
     "file-type": "^16.2.0",
-    "i18next": "^19.8.7",
-    "i18next-fs-backend": "^1.0.8",
-    "i18next-http-middleware": "^3.1.0",
+    "i18next": "^19.8.4",
+    "i18next-fs-backend": "^1.0.7",
+    "i18next-http-middleware": "^3.0.6",
     "multer": "^1.4.2",
     "nodemailer": "^6.4.17",
     "pg": "^8.5.1",
     "pg-hstore": "^2.3.3",
-    "sequelize": "^6.5.0",
+    "sequelize": "^6.3.5",
     "sequelize-cli": "^6.2.0",
-    "sqlite3": "^5.0.1",
+    "sqlite3": "^5.0.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",
     "cross-env": "^7.0.3",
-    "eslint": "^7.19.0",
+    "eslint": "^7.8.1",
     "eslint-config-airbnb": "^18.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-config-wesbos": "^1.0.1",
@@ -51,7 +52,10 @@
     "nodemon": "^2.0.6",
     "prettier": "^2.1.1",
     "smtp-server": "^3.8.0",
-    "supertest": "^6.1.3"
+    "supertest": "^6.0.1"
+  },
+  "prettier": {
+    "printWidth": 120
   },
   "jest": {
     "watchPlugins": [
@@ -62,8 +66,7 @@
       "<rootDir>/node_modules",
       "<rootDir>/config"
     ],
-    "testSequencer": "<rootDir>/test-sequencer.js",
-    "//": "Link: https://jestjs.io/docs/en/configuration#setupfilesafterenv-array",
+    "testSequencer": "<rootDir>/jest-sequencer.js",
     "setupFilesAfterEnv": [
       "<rootDir>/test-setup.js"
     ]

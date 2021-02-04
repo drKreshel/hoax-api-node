@@ -1,10 +1,8 @@
 const request = require('supertest');
 // const nodemailerStub = require('nodemailer-stub'); being replaced by SMTP server
 const { SMTPServer } = require('smtp-server'); // stands for Simple Mail Transfer Protocol
-
 const config = require('config');
 const app = require('../src/app');
-const sequelize = require('../src/config/database');
 const { User } = require('../src/associations');
 
 // const EmailService = require('../src/email/EmailService'); // not needed with SMTP server
@@ -37,10 +35,6 @@ beforeAll(async () => {
   });
 
   server.listen(config.mail.port, 'localhost');
-
-  if (process.env.NODE_ENV === 'test') {
-    await sequelize.sync();
-  }
 
   // assures that SMTP server is up before tests
   jest.setTimeout(20000);
@@ -307,7 +301,6 @@ describe('User activation', () => {
     await postUser();
     let users = await User.findAll();
     const token = users[0].activationToken;
-
     await request(app).post(`/api/1.0/users/token/${token}`); // ? Shouldn't be http PATCH?
     users = await User.findAll();
     expect(users[0].inactive).toBe(false);

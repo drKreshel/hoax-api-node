@@ -3,7 +3,6 @@ const bcrypt = require('bcrypt');
 const { SMTPServer } = require('smtp-server'); // stands for Simple Mail Transfer Protocol
 const config = require('config');
 const app = require('../src/app');
-const sequelize = require('../src/config/database');
 const { User, Token } = require('../src/associations');
 
 // languages
@@ -34,10 +33,6 @@ beforeAll(async () => {
   });
 
   server.listen(config.mail.port, 'localhost');
-
-  if (process.env.NODE_ENV === 'test') {
-    await sequelize.sync();
-  }
 
   // assures that SMTP server is up before tests
   jest.setTimeout(20000);

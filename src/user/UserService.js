@@ -100,8 +100,11 @@ const updateUser = async (id, body) => {
   // return User.update(body, { where: { id } }); // {returning: true} only works with postgres (psql)
 };
 
-const deleteUser = (id) => {
-  return User.destroy({ where: { id } });
+const deleteUser = async (id) => {
+  const user = await User.findOne({ where: { id } });
+  await FileService.deleteUserFiles(user);
+  await user.destroy();
+
   /** This code is for destroying Tokens manually. (On Delete cascade in model
    *  is not working properly all the times thx sequelize!)
    */

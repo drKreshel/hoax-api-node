@@ -15,16 +15,18 @@ module.exports = {
   directories: {
     uploadDir: 'upload-staging',
     profileDir: 'profile',
+    attachmentsDir: 'attachments',
   },
 };
 
+// PostgresSQL database config
 /* SQLite database
   database: {
     database: 'hoaxify',
-    username: 'drKreshel',
-    password: 'superfluosCat',
-    dialect: 'sqlite',
-    storage: './staging.sqlite',
+    username: 'postgres',
+    password: '1',
+    dialect: 'postgres',
+    host: 'localhost',
     logging: false,
   },
 */

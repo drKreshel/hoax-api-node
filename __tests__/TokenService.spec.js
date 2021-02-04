@@ -1,12 +1,5 @@
-const sequelize = require('../src/config/database');
 const { Token } = require('../src/associations');
 const TokenService = require('../src/auth/TokenService');
-
-beforeAll(async () => {
-  if (process.env.NODE_ENV === 'test') {
-    await sequelize.sync();
-  }
-});
 
 beforeEach(async () => {
   // we will not be having user creation on this spec, so we don't need to use cascade

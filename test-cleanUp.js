@@ -1,11 +1,17 @@
 const fs = require('fs');
 const path = require('path');
-const { uploadDir, profileDir } = require('config').directories;
+const { uploadDir, profileDir, attachmentsDir } = require('config').directories;
 
-const profileImageDir = path.join('.', uploadDir, profileDir);
+const profileImageDirectory = path.join('.', uploadDir, profileDir);
+const attachmentsDirectory = path.join('.', uploadDir, attachmentsDir);
 
 // deletes upload-test folder files after all tests are completed
-const files = fs.readdirSync(profileImageDir);
-for (const file of files) {
-  fs.unlinkSync(path.join(profileImageDir, file));
-}
+const clearFolder = (folder) => {
+  const files = fs.readdirSync(folder);
+  for (const file of files) {
+    fs.unlinkSync(path.join(folder, file));
+  }
+};
+
+clearFolder(profileImageDirectory);
+clearFolder(attachmentsDirectory);

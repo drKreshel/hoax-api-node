@@ -25,6 +25,7 @@
   "unsupported_image_file": "Bilddateityp wird nicht unterstützt. Bitte laden Sie Bilder vom Typ PNG oder JPEG hoch",
   "unauthorized_hoax_submit": "Sie sind nicht berechtigt, einen Hoax einzureichen",
   "hoax_submit_success": "Hoax wurde erfolgreich gespeichert",
-  "hoax_content_size": "Hoax muss mindestens 10 und höchstens 5000 Zeichen haben"
-  
+  "hoax_content_size": "Hoax muss mindestens 10 und höchstens 5000 Zeichen haben",
+  "attachment_size_limit": "Anhangsdatei darf nicht größer als 5 MB sein",
+  "unauthorized_hoax_delete": "Sie sind nicht berechtigt, den Hoax zu löschen"
 }

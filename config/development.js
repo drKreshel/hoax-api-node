@@ -18,5 +18,6 @@ module.exports = {
   directories: {
     uploadDir: 'upload-dev',
     profileDir: 'profile',
+    attachmentsDir: 'attachments',
   },
 };
