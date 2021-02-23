@@ -17,8 +17,9 @@ const createToken = async (user) => {
   }
   return token;
 };
-
+let counter = 0;
 const verify = async (token) => {
+  console.log('🚀 ~ file: TokenService.js ~ line 22 ~ verify ~ token', token);
   const oneWeekAgo = new Date(Date.now() - ONE_WEEK_IN_MILLIS);
   const dbToken = await Token.findOne({
     where: {
@@ -26,6 +27,8 @@ const verify = async (token) => {
       lastUsedAt: { [Op.gt]: oneWeekAgo },
     },
   });
+  console.log(`🚀 ~ file: TokenService.js ~ line 29 ~ verify ~ dbToken ${counter++}`, dbToken);
+
   dbToken.lastUsedAt = new Date();
   await dbToken.save();
   const userId = dbToken.userId;

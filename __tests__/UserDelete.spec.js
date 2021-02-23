@@ -42,6 +42,7 @@ const loginUser = async ({ email, password }) => {
 };
 
 const deleteUser = async ({ id, token, language } = {}) => {
+  console.log(id, token);
   const agent = request(app).delete(`/api/1.0/users/${id}`);
 
   if (token) {
@@ -81,7 +82,7 @@ describe('User delete', () => {
   it('returns "403" forbidden when delete request is sent with correct credentials but for different user', async () => {
     // user 1...
     await postUser(user1);
-    const token = loginUser(credentials);
+    const { token } = loginUser(credentials);
     // ...tries to delete user 2
     const userToBeDeleted = await postUser(user2);
     const response = await deleteUser({ id: userToBeDeleted.id, token });

@@ -10,8 +10,8 @@ module.exports = {
   mail: {
     service: 'gmail',
     auth: {
-      user: 'juanloza877@gmail.com',
-      pass: '^Uv2C8K1eJ^4',
+      user: 'anEmail@gmail.com',
+      pass: '^2212C42eJ^4',
     },
   },
   directories: {
